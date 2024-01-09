@@ -85,6 +85,22 @@ class Character(pygame.sprite.Sprite):
             self.Gravity = self.oGravity
             return False
 
+class projectile(pygame.sprite.Sprite):
+    def __init__(self, x, y, Damage, speed):
+        self.x = x
+        self.y = y
+        self.speed = speed
+        self.img = pygame.image.load("_Idle.png")
+        self.image = pygame.transform.scale_by(self.img)
+        self.rect = self.image.get_rect()
+        self.rect.center = (self.x, self.y)
+
+    def updateX(self, direction):
+        if direction == "LEFT":
+            self.x = self.x + -10 * self.speed
+            rect = self.img.get_rect()
+            rect.center = (self.x, self.y)
+            self.rect.center = (self.x, self.y)
 
 def draw(x1, y1, x2, y2, width):
     pygame.draw.rect(surface, GREEN, (x1, y1, x2, y2), width)
@@ -126,6 +142,8 @@ while True:
                 running = False
             if event.key == pygame.K_SPACE:
                 Jump = True
+            if event.key == pygame.K_ESCAPE:
+                pygame.quit()
 
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_a:
