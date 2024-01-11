@@ -9,6 +9,7 @@ FPS = 60
 # Constants
 # GRAVITY = 1
 
+
 pygame.init()
 surface = pygame.display.set_mode([1600, 900])
 pygame.display.set_caption("2D shooter")
@@ -32,6 +33,8 @@ class Character(pygame.sprite.Sprite):
         self.oGravity = -0.5
         self.Gravity = -0.4
         self.vel = 0
+        self.direction = "RIGHT"
+        self.maxBullets = 3
 
     def updateX(self, L, R):
         if L:
@@ -90,8 +93,8 @@ class projectile(pygame.sprite.Sprite):
         self.x = center[0]
         self.y = center[1]
         self.speed = speed
-        self.img = pygame.image.load("_Idle.png")
-        self.image = pygame.transform.scale_by(self.img, 1)
+        self.img = pygame.image.load("Bullet.png")
+        self.image = pygame.transform.scale_by(self.img, 5)
         self.rect = self.image.get_rect()
         self.rect.center = (self.x, self.y)
 
@@ -120,7 +123,6 @@ def shoot(center):
     bullet.updateX("RIGHT")
 
 
-
 def draw(x1, y1, x2, y2, width):
     pygame.draw.rect(surface, GREEN, (x1, y1, x2, y2), width)
 
@@ -134,11 +136,12 @@ clock = pygame.time.Clock()
 while True:
 
     surface.fill((43, 163, 212))
+
     floor = draw(100, 700, 1000, 100, 10)
+
     player.updateX(moveLeft, moveRight)
 
     surface.blit(player.image, player.rect)
-
 
     if Jump and player.collisionCheck():
         player.vel = -15
@@ -146,7 +149,7 @@ while True:
 
     if gun:
         # bullet = projectile(player.rect.center, 1)
-        bullet.updateX("RIGHT")
+        bullet.updateX(player.direction)
         surface.blit(bullet.image, bullet.rect)
 
     player.velocity()
@@ -163,8 +166,10 @@ while True:
             # pygame.key.set_repeat(10, 2)
             if event.key == pygame.K_a:
                 moveLeft = True
+                player.direction = "LEFT"
             if event.key == pygame.K_d:
                 moveRight = True
+                player.direction = "RIGHT"
             if event.key == pygame.K_ESCAPE:
                 running = False
             if event.key == pygame.K_SPACE:
@@ -173,7 +178,7 @@ while True:
                 pygame.quit()
             if event.key == pygame.K_j:
                 # shoot(player.rect.center)
-                bullet = projectile(player.rect.center, 3)
+                bullet = projectile(player.rect.center, 2)
                 gun = True
 
 
