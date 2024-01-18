@@ -87,28 +87,37 @@ class Character(pygame.sprite.Sprite):
             return False
 
 class projectile(pygame.sprite.Sprite):
-    def __init__(self, center, speed):
+    def __init__(self, center, speed, direction):
         pygame.sprite.Sprite.__init__(self)
         self.center = center
         self.x = center[0]
         self.y = center[1]
         self.speed = speed
-        self.img = pygame.image.load("Bullet.png")
-        self.image = pygame.transform.scale_by(self.img, 5)
-        self.rect = self.image.get_rect()
-        self.rect.center = (self.x, self.y)
+        self.direction = direction
+        if self.direction == "LEFT":
+            self.speed = -self.speed
+            self.img = pygame.image.load("Lbullet.png")
+            self.image = pygame.transform.scale_by(self.img, 5)
+            self.rect = self.image.get_rect()
+            self.rect.center = (self.x, self.y + 50)
+        else:
+            self.img = pygame.image.load("RBullet.png")
+            self.image = pygame.transform.scale_by(self.img, 5)
+            self.rect = self.image.get_rect()
+            self.rect.center = (self.x, self.y)
 
-    def updateX(self, direction):
-        if direction == "LEFT":
-            self.x = self.x + -10 * self.speed
-            rect = self.img.get_rect()
-            rect.center = (self.x, self.y)
-            self.rect.center = (self.x, self.y)
-        elif direction == "RIGHT":
-            self.x = self.x + 10 * self.speed
-            rect = self.img.get_rect()
-            rect.center = (self.x, self.y)
-            self.rect.center = (self.x, self.y)
+
+    # def updateX(self, direction):
+    #     if direction == "LEFT":
+    #         self.x = self.x + -10 * self.speed
+    #         rect = self.img.get_rect()
+    #         rect.center = (self.x, self.y)
+    #         self.rect.center = (self.x, self.y)
+    #     elif direction == "RIGHT":
+    #         self.x = self.x + 10 * self.speed
+    #         rect = self.img.get_rect()
+    #         rect.center = (self.x, self.y)
+    #         self.rect.center = (self.x, self.y)
 
     def hitCheck(self, targetCoords):
         if self.rect == targetCoords:
@@ -116,11 +125,19 @@ class projectile(pygame.sprite.Sprite):
         else:
             return False
 
+    def draw(self):
+        self.rect.center = (self.x, self.y)
+        surface.blit(bullet.image, bullet.rect)
 
-def shoot(center):
-    print("bang")
-    bullet = projectile(center, 1)
-    bullet.updateX("RIGHT")
+
+# def redrawGameWindow():
+#     for bullet in bullets:
+#         bullet.draw()
+
+# def shoot(center):
+#     print("bang")
+#     bullet = projectile(center, 1)
+#     bullet.updateX("RIGHT")
 
 
 def draw(x1, y1, x2, y2, width):
@@ -130,7 +147,8 @@ player = Character(200, 200, 5, 100, 1)
 # bullet = projectile(player.rect.center, 4)
 
 Jump = False
-gun = False
+
+bullets = []
 
 clock = pygame.time.Clock()
 while True:
@@ -141,16 +159,16 @@ while True:
 
     player.updateX(moveLeft, moveRight)
 
-    surface.blit(player.image, player.rect)
-
     if Jump and player.collisionCheck():
         player.vel = -15
         Jump = False
 
-    if gun:
-        # bullet = projectile(player.rect.center, 1)
-        bullet.updateX(player.direction)
-        surface.blit(bullet.image, bullet.rect)
+    for bullet in bullets:
+        if bullet.x < 1600 and bullet.x > 0:
+            bullet.x += bullet.speed  # Moves the bullet by its vel
+            print(bullet.rect)
+        else:
+            bullets.pop(bullets.index(bullet))
 
     player.velocity()
     player.collisionCheck()
@@ -158,9 +176,6 @@ while True:
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
-
-        # if event.type == pygame.joystick:
-        #     if event.type == pygame.
 
         if event.type == pygame.KEYDOWN:
             # pygame.key.set_repeat(10, 2)
@@ -177,10 +192,9 @@ while True:
             if event.key == pygame.K_ESCAPE:
                 pygame.quit()
             if event.key == pygame.K_j:
-                # shoot(player.rect.center)
-                bullet = projectile(player.rect.center, 2)
                 gun = True
-
+                if len(bullets) < 5:
+                    bullets.append(projectile(player.rect.center, 15, player.direction))
 
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_a:
@@ -190,10 +204,11 @@ while True:
             if event.key == pygame.K_SPACE:
                 Jump = False
 
-    # pygame.display.update()
+    for bullet in bullets:
+        bullet.draw()
+    surface.blit(player.image, player.rect)
     pygame.display.flip()
     clock.tick(60)
-    clock.tick()
-    # print(clock.get_fps())
+    # clock.tick()
 
 pygame.quit()
