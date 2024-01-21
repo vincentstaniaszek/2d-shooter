@@ -5,7 +5,7 @@ import sys
 # colours
 GREEN = (0, 255, 0)
 FPS = 60
-
+RED = (235, 64, 52)
 # Constants
 # GRAVITY = 1
 
@@ -87,64 +87,38 @@ class Character(pygame.sprite.Sprite):
             return False
 
 class projectile(pygame.sprite.Sprite):
-    def __init__(self, center, speed, direction):
+    def __init__(self, center, speed, direction, colour):
         pygame.sprite.Sprite.__init__(self)
         self.center = center
         self.x = center[0]
-        self.y = center[1]
+        self.y = center[1] - 30
         self.speed = speed
+        self.colour = colour
         self.direction = direction
         if self.direction == "LEFT":
             self.speed = -self.speed
-            self.img = pygame.image.load("Lbullet.png")
-            self.image = pygame.transform.scale_by(self.img, 5)
-            self.rect = self.image.get_rect()
-            self.rect.center = (self.x, self.y + 50)
-        else:
-            self.img = pygame.image.load("RBullet.png")
-            self.image = pygame.transform.scale_by(self.img, 5)
-            self.rect = self.image.get_rect()
-            self.rect.center = (self.x, self.y)
-
-
-    # def updateX(self, direction):
-    #     if direction == "LEFT":
-    #         self.x = self.x + -10 * self.speed
-    #         rect = self.img.get_rect()
-    #         rect.center = (self.x, self.y)
-    #         self.rect.center = (self.x, self.y)
-    #     elif direction == "RIGHT":
-    #         self.x = self.x + 10 * self.speed
-    #         rect = self.img.get_rect()
-    #         rect.center = (self.x, self.y)
-    #         self.rect.center = (self.x, self.y)
 
     def hitCheck(self, targetCoords):
-        if self.rect == targetCoords:
+        if self.x == targetCoords[0] and self.y == targetCoords[1]:
             return True
         else:
             return False
 
     def draw(self):
-        self.rect.center = (self.x, self.y)
-        surface.blit(bullet.image, bullet.rect)
-
+        pygame.draw.circle(surface, self.colour, (self.x, self.y), 7)
 
 # def redrawGameWindow():
+#     global bullet
 #     for bullet in bullets:
 #         bullet.draw()
-
-# def shoot(center):
-#     print("bang")
-#     bullet = projectile(center, 1)
-#     bullet.updateX("RIGHT")
+#     surface.blit(player.image, player.rect)
+#     pygame.display.flip()
 
 
 def draw(x1, y1, x2, y2, width):
     pygame.draw.rect(surface, GREEN, (x1, y1, x2, y2), width)
 
 player = Character(200, 200, 5, 100, 1)
-# bullet = projectile(player.rect.center, 4)
 
 Jump = False
 
@@ -152,11 +126,8 @@ bullets = []
 
 clock = pygame.time.Clock()
 while True:
-
     surface.fill((43, 163, 212))
-
     floor = draw(100, 700, 1000, 100, 10)
-
     player.updateX(moveLeft, moveRight)
 
     if Jump and player.collisionCheck():
@@ -165,8 +136,7 @@ while True:
 
     for bullet in bullets:
         if bullet.x < 1600 and bullet.x > 0:
-            bullet.x += bullet.speed  # Moves the bullet by its vel
-            print(bullet.rect)
+            bullet.x += bullet.speed
         else:
             bullets.pop(bullets.index(bullet))
 
@@ -194,7 +164,7 @@ while True:
             if event.key == pygame.K_j:
                 gun = True
                 if len(bullets) < 5:
-                    bullets.append(projectile(player.rect.center, 15, player.direction))
+                    bullets.append(projectile(player.rect.center, 15, player.direction, RED))
 
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_a:
