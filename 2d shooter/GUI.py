@@ -1,6 +1,8 @@
 import pygame
 from Game import *
 import sys
+import os
+pygame.mixer.init()
 
 # colours
 GREEN = (0, 255, 0)
@@ -9,6 +11,8 @@ RED = (235, 64, 52)
 # Constants
 # GRAVITY = 1
 
+shoot = pygame.mixer.Sound(os.path.join("audio", "Gun sounds", "9mm-pistol-shot.mp3"))
+walking = pygame.mixer.Sound(os.path.join("audio", "concrete-footsteps.mp3"))
 
 pygame.init()
 surface = pygame.display.set_mode([1600, 900])
@@ -26,7 +30,8 @@ class Character(pygame.sprite.Sprite):
         self.speed = speed
         self.Mhealth = Mhealth
         self.health = Mhealth
-        self.img = pygame.image.load("_Idle.png")
+        # self.img = pygame.image.load(os.path.join("Sprites","Soldier 1", "Idle.png"))
+        self.img = pygame.image.load("_idle.png")
         self.image = pygame.transform.scale_by(self.img, scale)
         self.rect = self.image.get_rect()
         self.rect.center = (self.x, self.y)
@@ -86,33 +91,30 @@ class Character(pygame.sprite.Sprite):
             self.Gravity = self.oGravity
             return False
 
+
 class projectile(pygame.sprite.Sprite):
     def __init__(self, center, speed, direction, colour):
         pygame.sprite.Sprite.__init__(self)
         self.center = center
-        self.x = center[0]
+        self.x = center[0] + 60
         self.y = center[1] - 30
         self.speed = speed
         self.colour = colour
         self.direction = direction
         if self.direction == "LEFT":
             self.speed = -self.speed
+            self.x = center[0] - 60
 
     def hitCheck(self, targetCoords):
-        if self.x == targetCoords[0] and self.y == targetCoords[1]:
+        # print(targetCoords[0])
+        # print(self.x)
+        if targetCoords[0] <= self.x <= (targetCoords[2] + targetCoords[0]) :
             return True
         else:
             return False
 
     def draw(self):
         pygame.draw.circle(surface, self.colour, (self.x, self.y), 7)
-
-# def redrawGameWindow():
-#     global bullet
-#     for bullet in bullets:
-#         bullet.draw()
-#     surface.blit(player.image, player.rect)
-#     pygame.display.flip()
 
 
 def draw(x1, y1, x2, y2, width):
@@ -151,8 +153,10 @@ while True:
             # pygame.key.set_repeat(10, 2)
             if event.key == pygame.K_a:
                 moveLeft = True
+                pygame.mixer.Sound.play(walking)
                 player.direction = "LEFT"
             if event.key == pygame.K_d:
+                pygame.mixer.Sound.play(walking)
                 moveRight = True
                 player.direction = "RIGHT"
             if event.key == pygame.K_ESCAPE:
@@ -163,16 +167,25 @@ while True:
                 pygame.quit()
             if event.key == pygame.K_j:
                 gun = True
+                pygame.mixer.Sound.play(shoot)
                 if len(bullets) < 5:
-                    bullets.append(projectile(player.rect.center, 15, player.direction, RED))
+                    # bullets.append(projectile(player.rect.center, 15, player.direction, RED))
+                    bullets.append(projectile((800,600), 15, player.direction, RED))
 
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_a:
                 moveLeft = False
+                pygame.mixer.Sound.stop(walking)
             if event.key == pygame.K_d:
                 moveRight = False
+                pygame.mixer.Sound.stop(walking)
             if event.key == pygame.K_SPACE:
                 Jump = False
+
+    for bullet in bullets:
+        if bullet.hitCheck(player.rect):
+            print("hit")
+            bullets.pop(bullets.index(bullet))
 
     for bullet in bullets:
         bullet.draw()
