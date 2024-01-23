@@ -3,7 +3,7 @@ from Game import *
 import sys
 import os
 pygame.mixer.init()
-
+pygame.Surface()
 # colours
 GREEN = (0, 255, 0)
 FPS = 60
@@ -11,8 +11,13 @@ RED = (235, 64, 52)
 # Constants
 # GRAVITY = 1
 
+#Audio
 shoot = pygame.mixer.Sound(os.path.join("audio", "Gun sounds", "9mm-pistol-shot.mp3"))
 walking = pygame.mixer.Sound(os.path.join("audio", "concrete-footsteps.mp3"))
+
+#Backgrounds
+Background1 = pygame.image.load("War.png").convert()
+
 
 pygame.init()
 surface = pygame.display.set_mode([1600, 900])
@@ -128,8 +133,10 @@ bullets = []
 
 clock = pygame.time.Clock()
 while True:
-    surface.fill((43, 163, 212))
-    floor = draw(100, 700, 1000, 100, 10)
+    # surface.fill((10, 163, 212))
+    # pygame.screen.blit(Background1,(0, 0))
+    surface.blit(Background1, (0, 0))
+    # floor = draw(100, 700, 1000, 100, 10)
     player.updateX(moveLeft, moveRight)
 
     if Jump and player.collisionCheck():
@@ -169,8 +176,8 @@ while True:
                 gun = True
                 pygame.mixer.Sound.play(shoot)
                 if len(bullets) < 5:
-                    # bullets.append(projectile(player.rect.center, 15, player.direction, RED))
-                    bullets.append(projectile((800,600), 15, player.direction, RED))
+                    bullets.append(projectile(player.rect.center, 15, player.direction, RED))
+                    # bullets.append(projectile((800,600), 15, player.direction, RED))
 
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_a:
@@ -194,4 +201,4 @@ while True:
     clock.tick(60)
     # clock.tick()
 
-pygame.quit()
+# pygame.quit()
