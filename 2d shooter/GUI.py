@@ -3,7 +3,8 @@ from Game import *
 import sys
 import os
 pygame.mixer.init()
-pygame.Surface()
+pygame.display.init()
+pygame.Surface((1600, 900))
 # colours
 GREEN = (0, 255, 0)
 FPS = 60
@@ -16,7 +17,7 @@ shoot = pygame.mixer.Sound(os.path.join("audio", "Gun sounds", "9mm-pistol-shot.
 walking = pygame.mixer.Sound(os.path.join("audio", "concrete-footsteps.mp3"))
 
 #Backgrounds
-Background1 = pygame.image.load("War.png").convert()
+Background1 = pygame.image.load("War.png")
 
 
 pygame.init()
@@ -27,14 +28,14 @@ moveLeft = False
 
 
 class Character(pygame.sprite.Sprite):
-    def __init__(self, x, y, scale, Mhealth, speed):
+    def __init__(self, x, y, scale, max_health, speed):
         pygame.sprite.Sprite.__init__(self)
         self.x = x
         self.y = y
         self.scale = scale
         self.speed = speed
-        self.Mhealth = Mhealth
-        self.health = Mhealth
+        self.max_health = max_health
+        self.health = max_health
         # self.img = pygame.image.load(os.path.join("Sprites","Soldier 1", "Idle.png"))
         self.img = pygame.image.load("_idle.png")
         self.image = pygame.transform.scale_by(self.img, scale)
@@ -135,7 +136,8 @@ clock = pygame.time.Clock()
 while True:
     # surface.fill((10, 163, 212))
     # pygame.screen.blit(Background1,(0, 0))
-    surface.blit(Background1, (0, 0))
+    # surface.blit(Background1, (0, 0))
+
     # floor = draw(100, 700, 1000, 100, 10)
     player.updateX(moveLeft, moveRight)
 
@@ -157,7 +159,6 @@ while True:
             sys.exit()
 
         if event.type == pygame.KEYDOWN:
-            # pygame.key.set_repeat(10, 2)
             if event.key == pygame.K_a:
                 moveLeft = True
                 pygame.mixer.Sound.play(walking)
@@ -194,6 +195,7 @@ while True:
             print("hit")
             bullets.pop(bullets.index(bullet))
 
+    surface.blit(Background1, (0, 0))
     for bullet in bullets:
         bullet.draw()
     surface.blit(player.image, player.rect)
