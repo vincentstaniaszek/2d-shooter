@@ -38,15 +38,14 @@ def get_image(sheet, frame, width, height, scale, colour):
     image.blit(sheet, (0, 0), ((frame * width), 0, width, height))
     image = pygame.transform.scale(image, (width * scale, height * scale))
     image.set_colorkey(colour)
-
     return image
 
-animation_list = []
+
 animation_steps = 7
-
-# for i in range(animation_steps):
-#     get_image(player_running, i, 128, 67, 3, WHITE)
-
+animation_list = []
+# last_update = pygame.time.get_ticks()
+# animation_cooldown = 100
+# frame = 0
 
 # frame_0 = get_image(player_running, 0, 128, 67, 3, WHITE)
 # frame_1 = get_image(player_running, 0, 256, 67, 3, WHITE)
@@ -86,6 +85,10 @@ class Character(pygame.sprite.Sprite):
         self.direction = "RIGHT"
         self.maxBullets = 3
         self.state = "idle"
+        self.animation_cooldown = 100
+        self.frame = 0
+        self.last_update = pygame.time.get_ticks()
+
 
     def updateX(self, L, R):
         if L:
@@ -137,12 +140,20 @@ class Character(pygame.sprite.Sprite):
             self.Gravity = self.oGravity
             return False
 
+    for i in range(animation_steps):
+        animation_list.append(get_image(player_running, i, 128, 67, 3, WHITE))
+
     def animationManage(self):
+        self.c_time = pygame.time.get_ticks()
         # if self.state == "idle":
-        for i in range(animation_steps):
-            animation_list.append((get_image(player_running, i, 128, 67, 3, WHITE), (0, 0)))
-
-
+        if self.c_time - self.last_update >= self.animation_cooldown:
+            print("c", self.c_time)
+            print("u", self.last_update)
+            self.frame += 1
+            if self.frame >= len(animation_list):
+                self.frame = 0
+            self.last_update = self.c_time
+        screen.blit((animation_list[self.frame]), (self.rect))
 
 
 
@@ -187,12 +198,16 @@ bullets = []
 
 clock = pygame.time.Clock()
 while True:
-    # surface.fill((10, 163, 212))
-    # pygame.screen.blit(Background1,(0, 0))
-    # surface.blit(Background1, (0, 0))
-
-    # floor = draw(100, 700, 1000, 100, 10)
     player.updateX(moveLeft, moveRight)
+
+
+    # current_time = pygame.time.get_ticks()
+    # if current_time - last_update >= animation_cooldown:
+    #     if frame > 5:
+    #         frame = 0
+    #     else:
+    #         frame += 1
+    #         last_update = current_time
 
     if Jump and player.collisionCheck():
         player.vel = -15
@@ -254,8 +269,6 @@ while True:
     screen.blit(player.image, player.rect)
     # screen.blit(frame_0, (0, 0))
     player.animationManage()
-    for i in range(animation_steps):
-        screen.blit(animation_list[i], (0, 0))
     pygame.display.flip()
     clock.tick(60)
     # print(clock.get_fps())
