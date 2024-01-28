@@ -14,7 +14,7 @@ pygame.display.set_caption("2D shooter")
 # Colours
 GREEN = (0, 255, 0)
 FPS = 60
-RED = (235, 64, 52)
+RED = (255, 0, 0)
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 
@@ -22,16 +22,22 @@ WHITE = (255, 255, 255)
 # GRAVITY = 1
 
 # Audio
+
 shoot = pygame.mixer.Sound(os.path.join("audio", "Gun sounds", "9mm-pistol-shot.mp3"))
+pygame.mixer.Sound.set_volume(shoot, 0.3)
 walking = pygame.mixer.Sound(os.path.join("audio", "concrete-footsteps.mp3"))
+pygame.mixer.Sound.set_volume(walking, 0.3)
 
 # Backgrounds
 Background1 = pygame.image.load(os.path.join("Backgrounds", "Background 1", "War.png")).convert_alpha()
 ground = pygame.image.load(os.path.join("Backgrounds", "Background 1", "road.png")).convert_alpha()
 
 # Animations
-player_running = pygame.image.load(os.path.join("Sprites", "Soldier 1", "idle(2).png")).convert_alpha()
-
+player_idle = pygame.image.load(os.path.join("Sprites", "Soldier 1", "idle(2).png")).convert_alpha()
+player_shooting = pygame.image.load(os.path.join("Sprites", "Soldier 1", "shot_2(1).png")).convert_alpha()
+player_running = pygame.image.load(os.path.join("Sprites", "Soldier 1", "Run2.png")).convert_alpha()
+update = 100
+cooldown = 750
 
 def get_image(sheet, frame, width, height, scale, colour):
     image = pygame.Surface((width, height)).convert_alpha()
@@ -41,8 +47,11 @@ def get_image(sheet, frame, width, height, scale, colour):
     return image
 
 
-animation_steps = 7
 animation_list = []
+
+
+# animation_steps = 7
+
 # last_update = pygame.time.get_ticks()
 # animation_cooldown = 100
 # frame = 0
@@ -74,7 +83,7 @@ class Character(pygame.sprite.Sprite):
         self.speed = speed
         self.max_health = max_health
         self.health = max_health
-        # self.img = pygame.image.load(os.path.join("Sprites","Soldier 1", "Idle.png"))
+        self.img = pygame.image.load(os.path.join("Sprites", "Soldier 1", "Idle.png"))
         self.img = pygame.image.load("_idle.png").convert_alpha()
         self.image = pygame.transform.scale_by(self.img, scale)
         self.rect = self.image.get_rect()
@@ -88,7 +97,6 @@ class Character(pygame.sprite.Sprite):
         self.animation_cooldown = 100
         self.frame = 0
         self.last_update = pygame.time.get_ticks()
-
 
     def updateX(self, L, R):
         if L:
@@ -140,21 +148,42 @@ class Character(pygame.sprite.Sprite):
             self.Gravity = self.oGravity
             return False
 
-    for i in range(animation_steps):
-        animation_list.append(get_image(player_running, i, 128, 67, 3, WHITE))
+        # self.rect = get_image(player_running, i, 128, 67, 3, WHITE)
 
     def animationManage(self):
         self.c_time = pygame.time.get_ticks()
-        # if self.state == "idle":
-        if self.c_time - self.last_update >= self.animation_cooldown:
-            print("c", self.c_time)
-            print("u", self.last_update)
-            self.frame += 1
-            if self.frame >= len(animation_list):
-                self.frame = 0
-            self.last_update = self.c_time
-        screen.blit((animation_list[self.frame]), (self.rect))
+        if self.state == "idle":
+            animation_steps = 4
+            animation_list = []
+            for i in range(animation_steps):
+                animation_list.append(get_image(player_idle, i, 128, 67, 3, WHITE))
+            if self.c_time - self.last_update >= self.animation_cooldown:
+                self.frame += 1
+                if self.frame >= len(animation_list):
+                    self.frame = 0
+                self.last_update = self.c_time
+        if self.state == "firing":
+            animation_steps = 4
+            animation_list = []
+            for i in range(animation_steps):
+                animation_list.append(get_image(player_shooting, i, 128, 64, 3, WHITE))
+            if self.c_time - self.last_update >= self.animation_cooldown:
+                self.frame += 1
+                if self.frame >= len(animation_list):
+                    self.frame = 0
+                self.last_update = self.c_time
+        if self.state == "running":
+            animation_steps = 4
+            animation_list = []
+            for i in range(animation_steps):
+                animation_list.append(get_image(player_running, i, 128, 61, 3, WHITE))
+            if self.c_time - self.last_update >= self.animation_cooldown:
+                self.frame += 1
+                if self.frame >= len(animation_list):
+                    self.frame = 0
+                self.last_update = self.c_time
 
+        screen.blit((animation_list[self.frame]), (self.x - 180, self.y - 100))
 
 
 class Projectile(pygame.sprite.Sprite):
@@ -199,8 +228,6 @@ bullets = []
 clock = pygame.time.Clock()
 while True:
     player.updateX(moveLeft, moveRight)
-
-
     # current_time = pygame.time.get_ticks()
     # if current_time - last_update >= animation_cooldown:
     #     if frame > 5:
@@ -208,6 +235,15 @@ while True:
     #     else:
     #         frame += 1
     #         last_update = current_time
+
+    tick = pygame.time.get_ticks()
+
+    if player.state == "firing":
+        if tick - update > cooldown:
+            player.state = "idle"
+            # print("t", pygame.time.get_ticks())
+            # print("u", update)
+            update = tick
 
     if Jump and player.collisionCheck():
         player.vel = -15
@@ -231,9 +267,11 @@ while True:
                 moveLeft = True
                 pygame.mixer.Sound.play(walking)
                 player.direction = "LEFT"
+                player.state = "running"
             if event.key == pygame.K_d:
                 pygame.mixer.Sound.play(walking)
                 moveRight = True
+                player.state = "running"
                 player.direction = "RIGHT"
             if event.key == pygame.K_ESCAPE:
                 running = False
@@ -244,16 +282,20 @@ while True:
             if event.key == pygame.K_j:
                 gun = True
                 pygame.mixer.Sound.play(shoot)
+                player.state = "firing"
                 if len(bullets) < 5:
-                    bullets.append(Projectile(player.rect.center, 15, player.direction, RED))
+                    bullets.append(
+                        Projectile((player.rect.center[0], player.rect.center[1] - 30), 15, player.direction, RED))
                     # bullets.append(projectile((800,600), 15, player.direction, RED))
 
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_a:
                 moveLeft = False
+                player.state = "idle"
                 pygame.mixer.Sound.stop(walking)
             if event.key == pygame.K_d:
                 moveRight = False
+                player.state = "idle"
                 pygame.mixer.Sound.stop(walking)
             if event.key == pygame.K_SPACE:
                 Jump = False
@@ -266,8 +308,10 @@ while True:
     loadBack(1)
     for bullet in bullets:
         bullet.draw()
-    screen.blit(player.image, player.rect)
+    # screen.blit(player.image, player.rect)
     # screen.blit(frame_0, (0, 0))
+    # pygame.draw.r
+    # pygame.draw.rect(screen, RED, player.rect)
     player.animationManage()
     pygame.display.flip()
     clock.tick(60)
