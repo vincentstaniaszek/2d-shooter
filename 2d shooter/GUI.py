@@ -45,6 +45,7 @@ player_death_right = pygame.image.load(os.path.join("Sprites", "Soldier 1", "Dea
 player_death_left = pygame.image.load(os.path.join("Sprites", "Soldier 1", "Dead_left.png")).convert_alpha()
 update = 100
 cooldown = 750
+cooldown1 = 200
 
 
 def get_image(sheet, frame, width, height, scale, colour):
@@ -163,6 +164,7 @@ class Character(pygame.sprite.Sprite):
         if self.state == "idle":
             animation_steps = 4
             animation_list = []
+
             if self.direction == "RIGHT":
                 for i in range(animation_steps):
                     animation_list.append(get_image(player_idle_right, i, 128, 67, 3, WHITE))
@@ -179,6 +181,7 @@ class Character(pygame.sprite.Sprite):
                     if self.frame >= len(animation_list):
                         self.frame = 0
                     self.last_update = self.c_time
+
         if self.state == "firing":
             animation_steps = 4
             animation_list = []
@@ -198,6 +201,7 @@ class Character(pygame.sprite.Sprite):
                     if self.frame >= len(animation_list):
                         self.frame = 0
                     self.last_update = self.c_time
+
         if self.state == "running":
             animation_steps = 4
             animation_list = []
@@ -217,6 +221,7 @@ class Character(pygame.sprite.Sprite):
                     if self.frame >= len(animation_list):
                         self.frame = 0
                     self.last_update = self.c_time
+
         if self.getHealth() <= 0:
             animation_steps = 4
             animation_list = []
@@ -226,6 +231,7 @@ class Character(pygame.sprite.Sprite):
                 if self.c_time - self.last_update >= self.animation_cooldown:
                     self.frame += 1
                     if self.frame >= len(animation_list):
+                        self.played = True
                         self.frame = 0
                     self.last_update = self.c_time
 
@@ -235,8 +241,11 @@ class Character(pygame.sprite.Sprite):
                 if self.c_time - self.last_update >= self.animation_cooldown:
                     self.frame += 1
                     if self.frame >= len(animation_list):
+                        self.played = True
                         self.frame = 0
                     self.last_update = self.c_time
+        if self.state == "null":
+            pass
 
         screen.blit((animation_list[self.frame]), (self.x - 180, self.y - 100))
 
@@ -280,7 +289,7 @@ Jump = False
 
 bullets = []
 enemies = []
-
+update1 = pygame.time.get_ticks() + 200
 clock = pygame.time.Clock()
 while True:
     player.updateX(moveLeft, moveRight)
@@ -338,7 +347,8 @@ while True:
                 pygame.mixer.Sound.play(shoot)
                 player.state = "firing"
                 if len(bullets) < 5:
-                    bullets.append(Projectile((player.rect.center[0], player.rect.center[1] - 30), 15, player.direction, RED))
+                    bullets.append(
+                        Projectile((player.rect.center[0], player.rect.center[1] - 30), 15, player.direction, RED))
                     # bullets.append(projectile((800,600), 15, player.direction, RED))
             if event.key == pygame.K_l:
                 enemies.append(Character(random.randint(30, 1570), 300, 5, 100, 1))
@@ -376,10 +386,14 @@ while True:
                 enemy.updateHealth(25)
                 print("hit")
                 bullets.pop(bullets.index(bullet))
-                update1 = pygame.time.get_ticks() + 200
-                if enemy.getHealth() <= 0:
-                    if pygame.time.get_ticks() > update1:
-                        enemies.remove(enemy)
+
+        if enemy.getHealth() <= 0:
+            print("c", enemy.c_time)
+            print("up", update1)
+            print("coll", enemy.animation_cooldown)
+            if enemy.c_time - update1 >= 2000:
+                enemies.pop(enemies.index(enemy))
+
 
     pygame.display.flip()
     clock.tick(60)
