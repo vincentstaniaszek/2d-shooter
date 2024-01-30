@@ -41,8 +41,8 @@ player_running_right = pygame.image.load(os.path.join("Sprites", "Soldier 1", "R
 player_idle_left = pygame.image.load(os.path.join("Sprites", "Soldier 1", "idle(2)_left.png")).convert_alpha()
 player_shoot_left = pygame.image.load(os.path.join("Sprites", "Soldier 1", "shot_2(1)_left.png")).convert_alpha()
 player_running_left = pygame.image.load(os.path.join("Sprites", "Soldier 1", "Run2_left.png")).convert_alpha()
-player_dead_right = pygame.image.load(os.path.join("Sprites", "Soldier 1", "Dead_right.png")).convert_alpha()
-player_dead_left = pygame.image.load(os.path.join("Sprites", "Soldier 1", "Dead_right.png")).convert_alpha()
+player_death_right = pygame.image.load(os.path.join("Sprites", "Soldier 1", "Dead_right.png")).convert_alpha()
+player_death_left = pygame.image.load(os.path.join("Sprites", "Soldier 1", "Dead_left.png")).convert_alpha()
 update = 100
 cooldown = 750
 
@@ -105,6 +105,7 @@ class Character(pygame.sprite.Sprite):
         self.animation_cooldown = 100
         self.frame = 0
         self.last_update = pygame.time.get_ticks()
+        self.played = False
 
     def updateX(self, L, R):
         if L:
@@ -142,8 +143,8 @@ class Character(pygame.sprite.Sprite):
     # def jump(self):
 
     def death(self):
-        dead = True
         print("dead")
+        return True
 
     def collisionCheck(self):
         # print(self.rect.center)
@@ -211,6 +212,26 @@ class Character(pygame.sprite.Sprite):
             if self.direction == "LEFT":
                 for i in range(animation_steps):
                     animation_list.append(get_image(player_running_left, i, 128, 61, 3, WHITE))
+                if self.c_time - self.last_update >= self.animation_cooldown:
+                    self.frame += 1
+                    if self.frame >= len(animation_list):
+                        self.frame = 0
+                    self.last_update = self.c_time
+        if self.getHealth() <= 0:
+            animation_steps = 4
+            animation_list = []
+            if self.direction == "RIGHT":
+                for i in range(animation_steps):
+                    animation_list.append(get_image(player_death_right, i, 128, 62, 3, WHITE))
+                if self.c_time - self.last_update >= self.animation_cooldown:
+                    self.frame += 1
+                    if self.frame >= len(animation_list):
+                        self.frame = 0
+                    self.last_update = self.c_time
+
+            if self.direction == "LEFT":
+                for i in range(animation_steps):
+                    animation_list.append(get_image(player_death_left, i, 128, 62, 3, WHITE))
                 if self.c_time - self.last_update >= self.animation_cooldown:
                     self.frame += 1
                     if self.frame >= len(animation_list):
@@ -321,7 +342,8 @@ while True:
                     # bullets.append(projectile((800,600), 15, player.direction, RED))
             if event.key == pygame.K_l:
                 enemies.append(Character(random.randint(30, 1570), 300, 5, 100, 1))
-
+            if event.key == pygame.K_p:
+                player.health = player.health - 120
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_a:
                 moveLeft = False
@@ -354,8 +376,10 @@ while True:
                 enemy.updateHealth(25)
                 print("hit")
                 bullets.pop(bullets.index(bullet))
+                update1 = pygame.time.get_ticks() + 200
                 if enemy.getHealth() <= 0:
-                    enemies.remove(enemy)
+                    if pygame.time.get_ticks() > update1:
+                        enemies.remove(enemy)
 
     pygame.display.flip()
     clock.tick(60)
