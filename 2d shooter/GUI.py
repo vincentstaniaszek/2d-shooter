@@ -1,3 +1,5 @@
+import random
+
 import pygame
 from Game import *
 import sys
@@ -33,11 +35,17 @@ Background1 = pygame.image.load(os.path.join("Backgrounds", "Background 1", "War
 ground = pygame.image.load(os.path.join("Backgrounds", "Background 1", "road.png")).convert_alpha()
 
 # Animations
-player_idle = pygame.image.load(os.path.join("Sprites", "Soldier 1", "idle(2).png")).convert_alpha()
-player_shooting = pygame.image.load(os.path.join("Sprites", "Soldier 1", "shot_2(1).png")).convert_alpha()
-player_running = pygame.image.load(os.path.join("Sprites", "Soldier 1", "Run2.png")).convert_alpha()
+player_idle_right = pygame.image.load(os.path.join("Sprites", "Soldier 1", "idle(2).png")).convert_alpha()
+player_shoot_right = pygame.image.load(os.path.join("Sprites", "Soldier 1", "shot_2(1).png")).convert_alpha()
+player_running_right = pygame.image.load(os.path.join("Sprites", "Soldier 1", "Run2.png")).convert_alpha()
+player_idle_left = pygame.image.load(os.path.join("Sprites", "Soldier 1", "idle(2)_left.png")).convert_alpha()
+player_shoot_left = pygame.image.load(os.path.join("Sprites", "Soldier 1", "shot_2(1)_left.png")).convert_alpha()
+player_running_left = pygame.image.load(os.path.join("Sprites", "Soldier 1", "Run2_left.png")).convert_alpha()
+player_dead_right = pygame.image.load(os.path.join("Sprites", "Soldier 1", "Dead_right.png")).convert_alpha()
+player_dead_left = pygame.image.load(os.path.join("Sprites", "Soldier 1", "Dead_right.png")).convert_alpha()
 update = 100
 cooldown = 750
+
 
 def get_image(sheet, frame, width, height, scale, colour):
     image = pygame.Surface((width, height)).convert_alpha()
@@ -122,7 +130,6 @@ class Character(pygame.sprite.Sprite):
 
     def updateHealth(self, damage):
         self.health = self.health - damage
-        print(self.health)
         if self.health <= 0:
             self.death()
         else:
@@ -155,33 +162,60 @@ class Character(pygame.sprite.Sprite):
         if self.state == "idle":
             animation_steps = 4
             animation_list = []
-            for i in range(animation_steps):
-                animation_list.append(get_image(player_idle, i, 128, 67, 3, WHITE))
-            if self.c_time - self.last_update >= self.animation_cooldown:
-                self.frame += 1
-                if self.frame >= len(animation_list):
-                    self.frame = 0
-                self.last_update = self.c_time
+            if self.direction == "RIGHT":
+                for i in range(animation_steps):
+                    animation_list.append(get_image(player_idle_right, i, 128, 67, 3, WHITE))
+                if self.c_time - self.last_update >= self.animation_cooldown:
+                    self.frame += 1
+                    if self.frame >= len(animation_list):
+                        self.frame = 0
+                    self.last_update = self.c_time
+            if self.direction == "LEFT":
+                for i in range(animation_steps):
+                    animation_list.append(get_image(player_idle_left, i, 128, 67, 3, WHITE))
+                if self.c_time - self.last_update >= self.animation_cooldown:
+                    self.frame += 1
+                    if self.frame >= len(animation_list):
+                        self.frame = 0
+                    self.last_update = self.c_time
         if self.state == "firing":
             animation_steps = 4
             animation_list = []
-            for i in range(animation_steps):
-                animation_list.append(get_image(player_shooting, i, 128, 64, 3, WHITE))
-            if self.c_time - self.last_update >= self.animation_cooldown:
-                self.frame += 1
-                if self.frame >= len(animation_list):
-                    self.frame = 0
-                self.last_update = self.c_time
+            if self.direction == "RIGHT":
+                for i in range(animation_steps):
+                    animation_list.append(get_image(player_shoot_right, i, 128, 64, 3, WHITE))
+                if self.c_time - self.last_update >= self.animation_cooldown:
+                    self.frame += 1
+                    if self.frame >= len(animation_list):
+                        self.frame = 0
+                    self.last_update = self.c_time
+            if self.direction == "LEFT":
+                for i in range(animation_steps):
+                    animation_list.append(get_image(player_shoot_left, i, 128, 64, 3, WHITE))
+                if self.c_time - self.last_update >= self.animation_cooldown:
+                    self.frame += 1
+                    if self.frame >= len(animation_list):
+                        self.frame = 0
+                    self.last_update = self.c_time
         if self.state == "running":
             animation_steps = 4
             animation_list = []
-            for i in range(animation_steps):
-                animation_list.append(get_image(player_running, i, 128, 61, 3, WHITE))
-            if self.c_time - self.last_update >= self.animation_cooldown:
-                self.frame += 1
-                if self.frame >= len(animation_list):
-                    self.frame = 0
-                self.last_update = self.c_time
+            if self.direction == "RIGHT":
+                for i in range(animation_steps):
+                    animation_list.append(get_image(player_running_right, i, 128, 61, 3, WHITE))
+                if self.c_time - self.last_update >= self.animation_cooldown:
+                    self.frame += 1
+                    if self.frame >= len(animation_list):
+                        self.frame = 0
+                    self.last_update = self.c_time
+            if self.direction == "LEFT":
+                for i in range(animation_steps):
+                    animation_list.append(get_image(player_running_left, i, 128, 61, 3, WHITE))
+                if self.c_time - self.last_update >= self.animation_cooldown:
+                    self.frame += 1
+                    if self.frame >= len(animation_list):
+                        self.frame = 0
+                    self.last_update = self.c_time
 
         screen.blit((animation_list[self.frame]), (self.x - 180, self.y - 100))
 
@@ -220,10 +254,11 @@ def draw(x1, y1, x2, y2, width):
 
 
 player = Character(200, 200, 5, 100, 1)
-
+# enemy = Character(600, 300, 5, 100, 1)
 Jump = False
 
 bullets = []
+enemies = []
 
 clock = pygame.time.Clock()
 while True:
@@ -241,8 +276,6 @@ while True:
     if player.state == "firing":
         if tick - update > cooldown:
             player.state = "idle"
-            # print("t", pygame.time.get_ticks())
-            # print("u", update)
             update = tick
 
     if Jump and player.collisionCheck():
@@ -284,9 +317,10 @@ while True:
                 pygame.mixer.Sound.play(shoot)
                 player.state = "firing"
                 if len(bullets) < 5:
-                    bullets.append(
-                        Projectile((player.rect.center[0], player.rect.center[1] - 30), 15, player.direction, RED))
+                    bullets.append(Projectile((player.rect.center[0], player.rect.center[1] - 30), 15, player.direction, RED))
                     # bullets.append(projectile((800,600), 15, player.direction, RED))
+            if event.key == pygame.K_l:
+                enemies.append(Character(random.randint(30, 1570), 300, 5, 100, 1))
 
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_a:
@@ -309,10 +343,20 @@ while True:
     for bullet in bullets:
         bullet.draw()
     # screen.blit(player.image, player.rect)
-    # screen.blit(frame_0, (0, 0))
-    # pygame.draw.r
     # pygame.draw.rect(screen, RED, player.rect)
     player.animationManage()
+    for enemy in enemies:
+        enemy.velocity()
+        enemy.collisionCheck()
+        enemy.animationManage()
+        for bullet in bullets:
+            if bullet.hitCheck(enemy.rect):
+                enemy.updateHealth(25)
+                print("hit")
+                bullets.pop(bullets.index(bullet))
+                if enemy.getHealth() <= 0:
+                    enemies.remove(enemy)
+
     pygame.display.flip()
     clock.tick(60)
     # print(clock.get_fps())
