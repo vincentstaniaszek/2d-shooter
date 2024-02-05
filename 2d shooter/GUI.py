@@ -8,6 +8,7 @@ import os
 pygame.init()
 pygame.mixer.init()
 pygame.display.init()
+pygame.font.init()
 pygame.Surface((1600, 900))
 screen = pygame.display.set_mode((1600, 900))
 pygame.display.set_caption("2D shooter")
@@ -46,6 +47,10 @@ player_death_left = pygame.image.load(os.path.join("Sprites", "Soldier 1", "Dead
 update = 100
 cooldown = 750
 cooldown1 = 200
+
+# Text
+test = pygame.font.SysFont("Comic Sans MS", 30)
+
 
 
 def get_image(sheet, frame, width, height, scale, colour):
@@ -97,7 +102,7 @@ class Character(pygame.sprite.Sprite):
         self.image = pygame.transform.scale_by(self.img, scale)
         self.rect = self.image.get_rect()
         self.rect.center = (self.x, self.y)
-        self.oGravity = -0.5
+        self.oGravity = -0.6
         self.Gravity = -0.4
         self.vel = 0
         self.direction = "RIGHT"
@@ -312,12 +317,6 @@ while True:
         player.vel = -15
         Jump = False
 
-    for bullet in bullets:
-        if 1600 > bullet.x > 0:
-            bullet.x += bullet.speed
-        else:
-            bullets.pop(bullets.index(bullet))
-
     player.velocity()
     player.collisionCheck()
     for event in pygame.event.get():
@@ -348,12 +347,12 @@ while True:
                 player.state = "firing"
                 if len(bullets) < 5:
                     bullets.append(
-                        Projectile((player.rect.center[0], player.rect.center[1] - 30), 15, player.direction, RED))
+                        Projectile((player.rect.center[0], player.rect.center[1] - 30), 20, player.direction, RED))
                     # bullets.append(projectile((800,600), 15, player.direction, RED))
             if event.key == pygame.K_l:
                 enemies.append(Character(random.randint(30, 1570), 300, 5, 100, 1))
             if event.key == pygame.K_p:
-                player.health = player.health - 120
+                player.health = player.health - 32
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_a:
                 moveLeft = False
@@ -366,14 +365,18 @@ while True:
             if event.key == pygame.K_SPACE:
                 Jump = False
 
+    loadBack(1)
+
     for bullet in bullets:
+        bullet.draw()
         if bullet.hitCheck(player.rect):
             print("hit")
             bullets.pop(bullets.index(bullet))
+        if 1600 > bullet.x > 0:
+            bullet.x += bullet.speed
+        else:
+            bullets.pop(bullets.index(bullet))
 
-    loadBack(1)
-    for bullet in bullets:
-        bullet.draw()
     # screen.blit(player.image, player.rect)
     # pygame.draw.rect(screen, RED, player.rect)
     player.animationManage()
@@ -393,8 +396,8 @@ while True:
             print("coll", enemy.animation_cooldown)
             if enemy.c_time - update1 >= 2000:
                 enemies.pop(enemies.index(enemy))
-
-
+    text_surface = test.render(("Health:"+str(player.health)), False, (0, 0, 0))
+    screen.blit(text_surface, (0, 0))
     pygame.display.flip()
     clock.tick(60)
     # print(clock.get_fps())
