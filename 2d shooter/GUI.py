@@ -112,6 +112,7 @@ class Character(pygame.sprite.Sprite):
         self.frame = 0
         self.last_update = pygame.time.get_ticks()
         self.played = False
+        self.bar = pygame.Rect(10, 50, 300, 50)
 
     def updateX(self, L, R):
         if L:
@@ -141,6 +142,9 @@ class Character(pygame.sprite.Sprite):
             self.death()
         else:
             pass
+
+    def drawBar(self):
+        pygame.draw.rect(screen, RED, self.bar, 30)
 
     def velocity(self):
         self.vel = self.vel - self.Gravity
@@ -287,6 +291,12 @@ class Projectile(pygame.sprite.Sprite):
 def draw(x1, y1, x2, y2, width):
     pygame.draw.rect(screen, GREEN, (x1, y1, x2, y2), width)
 
+# def healthBar(health):
+#
+#     pygame.draw.rect(screen, RED, bar, 30)
+#     bar.width -= health
+#     # pygame.transform
+
 
 player = Character(200, 200, 5, 100, 1)
 # enemy = Character(600, 300, 5, 100, 1)
@@ -397,6 +407,9 @@ while True:
             if enemy.c_time - update1 >= 2000:
                 enemies.pop(enemies.index(enemy))
     text_surface = test.render(("Health:"+str(player.health)), False, (0, 0, 0))
+
+    player.drawBar()
+
     screen.blit(text_surface, (0, 0))
     pygame.display.flip()
     clock.tick(60)
