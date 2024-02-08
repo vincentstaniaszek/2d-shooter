@@ -14,16 +14,15 @@ pygame.display.set_caption("2D shooter")
 
 # Colours
 GREEN = (0, 255, 0)
-FPS = 60
 RED = (255, 0, 0)
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
+SILVER = (175, 179, 176)
 
 # Constants
-# GRAVITY = 1
+FPS = 60
 
 # Audio
-
 shoot = pygame.mixer.Sound(os.path.join("audio", "Gun sounds", "9mm-pistol-shot.mp3"))
 pygame.mixer.Sound.set_volume(shoot, 0.3)
 walking = pygame.mixer.Sound(os.path.join("audio", "concrete-footsteps.mp3"))
@@ -44,7 +43,7 @@ player_death_right = pygame.image.load(os.path.join("Sprites", "Soldier 1", "Dea
 player_death_left = pygame.image.load(os.path.join("Sprites", "Soldier 1", "Dead_left.png")).convert_alpha()
 update = 100
 cooldown = 750
-cooldown1 = 200
+
 
 # Text
 test = pygame.font.SysFont("Comic Sans MS", 30)
@@ -60,20 +59,6 @@ def get_image(sheet, frame, width, height, scale, colour):
 
 animation_list = []
 
-
-# animation_steps = 7
-
-# last_update = pygame.time.get_ticks()
-# animation_cooldown = 100
-# frame = 0
-
-# frame_0 = get_image(player_running, 0, 128, 67, 3, WHITE)
-# frame_1 = get_image(player_running, 0, 256, 67, 3, WHITE)
-# frame_2 = get_image(player_running, 0, 384, 67, 3, WHITE)
-# frame_3 = get_image(player_running, 0, 512, 67, 3, WHITE)
-# frame_4 = get_image(player_running, 0, 640, 67, 3, WHITE)
-# frame_5 = get_image(player_running, 0, 768, 67, 3, WHITE)
-# frame_6 = get_image(player_running, 0, 896, 67, 3, WHITE)
 
 def loadBack(level):
     if level == 1:
@@ -134,7 +119,7 @@ class Character(pygame.sprite.Sprite):
         rect.center = (self.x, self.y)
         self.rect.center = (self.x, self.y)
 
-    def getHealth(self):
+    def getHealth(self) -> int:
         return self.health
 
     def updateHealth(self, damage):
@@ -143,14 +128,6 @@ class Character(pygame.sprite.Sprite):
             self.death()
         else:
             pass
-
-    def healthBar(self):
-        self.bar = pygame.Rect(10, 40, 4 * self.health, 40)
-        pygame.draw.rect(screen, RED, self.bar, 50)
-
-    def overheadBar(self):
-        self.bar = pygame.Rect(self.x - 45, self.y - 120, 1 * self.health, 10)
-        pygame.draw.rect(screen, RED, self.bar, 50)
 
     def velocity(self):
         self.vel = self.vel - self.Gravity
@@ -161,6 +138,7 @@ class Character(pygame.sprite.Sprite):
         return True
 
     def collisionCheck(self):
+
         # print(self.rect.center)
         if 594 < self.rect.center[1] < 680 and self.vel >= 0:
             self.Gravity = 0
@@ -177,7 +155,6 @@ class Character(pygame.sprite.Sprite):
         if self.state == "idle":
             animation_steps = 4
             animation_list = []
-
             if self.direction == "RIGHT":
                 for i in range(animation_steps):
                     animation_list.append(get_image(player_idle_right, i, 128, 67, 3, WHITE))
@@ -267,6 +244,22 @@ class Player(Character):
     def __init__(self, x, y, scale):
         super().__init__(x, y, scale, 100, 1)
 
+    def healthBar(self):
+        pygame.draw.rect(screen, SILVER, (10, 40, 400, 40), 20)
+        pygame.draw.rect(screen, BLACK, (5, 35, 410, 50), 5)
+        self.bar = pygame.Rect(10, 40, 4 * self.health, 40)
+        pygame.draw.rect(screen, RED, self.bar, 50)
+
+
+class Enemy(Character):
+    def __init__(self, x, y, scale):
+        super().__init__(x, y, scale, 100, 1)
+
+    def healthBar(self):
+        pygame.draw.rect(screen, SILVER, (self.x - 45, self.y - 120, 100, 10), 20)
+        pygame.draw.rect(screen, BLACK, (self.x - 40, self.y - 125, 100, 5), 20)
+        self.bar = pygame.Rect(self.x - 45, self.y - 120, 1 * self.health, 10)
+        pygame.draw.rect(screen, RED, self.bar, 50)
 
 class Projectile(pygame.sprite.Sprite):
     def __init__(self, center, speed, direction, colour):
@@ -363,7 +356,7 @@ while True:
                         Projectile((player1.rect.center[0], player1.rect.center[1] - 30), 20, player1.direction, RED))
                     # bullets.append(projectile((800,600), 15, player.direction, RED))
             if event.key == pygame.K_l:
-                enemies.append(Character(random.randint(30, 1570), 300, 5, 100, 1))
+                enemies.append(Enemy(random.randint(30, 1570), 300, 5))
             if event.key == pygame.K_p:
                 player1.health = player1.health - 32
         if event.type == pygame.KEYUP:
@@ -397,7 +390,7 @@ while True:
         enemy.velocity()
         enemy.collisionCheck()
         enemy.animationManage()
-        enemy.overheadBar()
+        enemy.healthBar()
         for bullet in bullets:
             if bullet.hitCheck(enemy.rect):
                 enemy.updateHealth(25)
@@ -410,12 +403,9 @@ while True:
         if enemy.getHealth() <= 0:
             if enemy.c_time - update1 >= 2000:
                 enemies.pop(enemies.index(enemy))
-    text_surface = test.render(("Health:" + str(player1.health)), False, (0, 0, 0))
-
+    text_surface = test.render(("Health:" + str(player1.health)), True, (0, 0, 0))
     player1.healthBar()
-    # player.overheadBar()
-
-    screen.blit(text_surface, (0, 0))
+    screen.blit(text_surface, (10, 35))
     pygame.display.flip()
     clock.tick(60)
     # print(clock.get_fps())
