@@ -2,6 +2,7 @@ import random
 import pygame
 import sys
 import os
+from time import time
 
 pygame.init()
 pygame.mixer.init()
@@ -10,7 +11,7 @@ pygame.font.init()
 pygame.Surface((1600, 900))
 screen = pygame.display.set_mode((1600, 900))
 pygame.display.set_caption("2D shooter")
-from time import time
+
 
 WAITING_INTERVAL = 20000000
 start = time()
@@ -46,6 +47,8 @@ def muted(state):
         pygame.mixer.Sound.set_volume(shoot, 0)
         pygame.mixer.Sound.set_volume(walking, 0)
 
+
+muted(sound)
 
 # Backgrounds
 game_state = "menu"
@@ -84,8 +87,8 @@ update = 100
 cooldown = 750
 
 # Text
-health = pygame.font.SysFont("Comic Sans MS", 30)
-ammo = pygame.font.SysFont("Comic Sans MS", 30)
+health = pygame.font.SysFont("Times New Roman", 30)
+ammo = pygame.font.SysFont("Times New Roman", 30)
 
 
 def get_image(sheet, frame, width, height, scale, colour):
@@ -102,19 +105,19 @@ current_time = pygame.time.get_ticks()
 # last_up = current_time
 
 
-class wait():
-    def __init__(self):
-        self.current_time = pygame.time.get_ticks()
-        self.last_up = 1000
-
-    def wait1(self, time):
-        print("c!", self.current_time)
-        print("LU", self.last_up)
-        print("T", time)
-        if self.current_time - self.last_up >= time:
-            print("yay")
-            self.last_up = self.current_time
-            return True
+# class wait():
+#     def __init__(self):
+#         self.current_time = pygame.time.get_ticks()
+#         self.last_up = 1000
+#
+#     def wait1(self, time):
+#         print("c!", self.current_time)
+#         print("LU", self.last_up)
+#         print("T", time)
+#         if self.current_time - self.last_up >= time:
+#             print("yay")
+#             self.last_up = self.current_time
+#             return True
 
 
 def loadBack(level):
@@ -169,11 +172,19 @@ def menuControls():
                 pygame.mouse.get_pos()[0] < difficulty_button[
             0] + 500 and difficulty_button[1] < pygame.mouse.get_pos()[1] < difficulty_button[1] + 110:
             difficulty = "easy"
+        if event.type == pygame.MOUSEBUTTONDOWN and exit_button[0] < pygame.mouse.get_pos()[0] < exit_button[
+            0] + 500 and exit_button[1] < pygame.mouse.get_pos()[1] < exit_button[1] + 110:
+            game_state = "playing"
+
+    elif game_state == "death":
+        if event.type == pygame.MOUSEBUTTONDOWN and options_button[0] < pygame.mouse.get_pos()[0] < options_button[
+            0] + 500 and options_button[1] < pygame.mouse.get_pos()[1] < options_button[1] + 110:
+            game_state = "menu"
 
         if event.type == pygame.MOUSEBUTTONDOWN and exit_button[0] < pygame.mouse.get_pos()[0] < exit_button[
             0] + 500 and \
                 exit_button[1] < pygame.mouse.get_pos()[1] < exit_button[1] + 110:
-            game_state = "menu"
+            pygame.quit()
 
 
 moveRight = False
@@ -195,6 +206,13 @@ def options():
     else:
         screen.blit(pygame.font.SysFont("Times New Roman", 30).render("DIFFICULTY HARD", True, WHITE, ), (680, 515))
     screen.blit(pygame.font.SysFont("Times New Roman", 30).render("BACK", True, WHITE, ), (765, 665))
+
+
+def deathScreen():
+    global game_state
+    screen.fill(DARK_GREEN)
+    pygame.draw.rect(screen, GREY, options_button)
+    pygame.draw.rect(screen, GREY, exit_button)
 
 
 class Character(pygame.sprite.Sprite):
@@ -437,6 +455,10 @@ class Enemy(Character):
         self.maxBullets = 1
         self.move = random.randint(-1, 1)
         self.seen = False  # private attribute which outputs True if the player has been seen by the enemy
+        self.shoot_cooldown = 400
+        self.move_cooldown = random.randint(200, 400)
+        self.l_up = pygame.time.get_ticks()
+        self.last_up = pygame.time.get_ticks()
 
     def healthBar(self):
         pygame.draw.rect(screen, SILVER, (self.x - 45, self.y - 120, 100, 5), 20)
@@ -446,8 +468,6 @@ class Enemy(Character):
 
     def shoot(self):
         self.state = "firing"
-        if time() - start >= WAITING_INTERVAL:
-            print("yaya")
         if len(self.bullets) < self.maxBullets:
             pygame.mixer.Sound.play(shoot)
             self.bullets.append(
@@ -477,10 +497,9 @@ class Enemy(Character):
             self.direction = "RIGHT"
             # print("c", self.c_time)
             # print("u", self.last_update)
-            print("", )
-            if self.c_time - self.last_update + random.randint(50, 200) >= 200:
+            if self.c_time - self.last_up >= self.move_cooldown:
                 self.move = 0
-                self.last_update = self.c_time
+                self.last_up = self.c_time
         # print(self.move)
         if self.move == -1:
             self.updateX(1, 0)
@@ -488,22 +507,28 @@ class Enemy(Character):
             self.direction = "LEFT"
             # print("c", self.c_time)
             # print("u", self.last_update)
-            print("", )
-            if self.c_time - self.last_update >= 100:
+            if self.c_time - self.last_up >= self.move_cooldown:
                 self.move = 0
-                self.last_update = self.c_time
+                self.last_up = self.c_time
         if self.move == 0:
             self.state = "idle"
-            if self.c_time - self.last_update >= 100:
+            if self.c_time - self.last_up >= self.move_cooldown:
                 self.move = random.randint(-1, 1)
-                self.last_update = self.c_time
+                self.last_up = self.c_time
 
     def AI(self):
+        c_time = pygame.time.get_ticks()
         self.movement()
         if self.vision(player1.x, player1.y):
-            enemy.shoot()
             self.seen = True
             self.move = 0
+            # print("c", c_time)
+            # print("u", self.l_up)
+            self.state = "firing"
+            if c_time - self.l_up >= self.shoot_cooldown:
+                self.l_up = c_time
+                enemy.shoot()
+
 
         if self.seen:
             if not self.vision(player1.x, player1.y):
@@ -616,7 +641,7 @@ def draw(x1, y1, x2, y2, width):
     pygame.draw.rect(screen, GREEN, (x1, y1, x2, y2), width)
 
 
-delay = wait()
+# delay = wait()
 player1 = Player(200, 200)
 
 Jump = False
@@ -699,10 +724,14 @@ while True:
         mainMenu()
     if game_state == "options":
         options()
+    if game_state == "death":
+        deathScreen()
 
     # pygame.draw.rect(screen, RED, player1.rect)
     if game_state == "playing":
         loadBack(1)
+        # if player1.getHealth() <= 0:
+        #     game_state = "death"
         player1.animationManage()
         for enemy in enemies:
             enemy.velocity()
