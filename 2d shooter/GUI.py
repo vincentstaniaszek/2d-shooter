@@ -12,7 +12,6 @@ pygame.Surface((1600, 900))
 screen = pygame.display.set_mode((1600, 900))
 pygame.display.set_caption("2D shooter")
 
-
 WAITING_INTERVAL = 20000000
 start = time()
 # pygame.display.set_mode((1600, 900))
@@ -36,6 +35,8 @@ difficulty = "easy"
 sound = True
 shoot = pygame.mixer.Sound(os.path.join("audio", "Gun sounds", "9mm-pistol-shot.mp3"))
 walking = pygame.mixer.Sound(os.path.join("audio", "concrete-footsteps.mp3"))
+
+player_list = []
 
 
 def muted(state):
@@ -213,6 +214,9 @@ def deathScreen():
     screen.fill(DARK_GREEN)
     pygame.draw.rect(screen, GREY, options_button)
     pygame.draw.rect(screen, GREY, exit_button)
+    screen.blit(pygame.font.SysFont("Times New Roman", 30).render("YOU DIED", True, WHITE, ), (750, 200))
+    screen.blit(pygame.font.SysFont("Times New Roman", 30).render("MAIN MENU", True, WHITE, ), (730, 515))
+    screen.blit(pygame.font.SysFont("Times New Roman", 30).render("EXIT", True, WHITE, ), (765, 665))
 
 
 class Character(pygame.sprite.Sprite):
@@ -456,7 +460,7 @@ class Enemy(Character):
         self.move = random.randint(-1, 1)
         self.seen = False  # private attribute which outputs True if the player has been seen by the enemy
         self.shoot_cooldown = 400
-        self.move_cooldown = random.randint(200, 400)
+        self.move_cooldown = random.randint(400, 600)
         self.l_up = pygame.time.get_ticks()
         self.last_up = pygame.time.get_ticks()
 
@@ -512,7 +516,7 @@ class Enemy(Character):
                 self.last_up = self.c_time
         if self.move == 0:
             self.state = "idle"
-            if self.c_time - self.last_up >= self.move_cooldown:
+            if self.c_time - self.last_up >= self.move_cooldown + 700:
                 self.move = random.randint(-1, 1)
                 self.last_up = self.c_time
 
@@ -528,7 +532,6 @@ class Enemy(Character):
             if c_time - self.l_up >= self.shoot_cooldown:
                 self.l_up = c_time
                 enemy.shoot()
-
 
         if self.seen:
             if not self.vision(player1.x, player1.y):
@@ -730,8 +733,10 @@ while True:
     # pygame.draw.rect(screen, RED, player1.rect)
     if game_state == "playing":
         loadBack(1)
-        # if player1.getHealth() <= 0:
-        #     game_state = "death"
+        if player1.getHealth() <= 0:
+            game_state = "death"
+            player1 = Player(200, 200)
+            enemies.clear()
         player1.animationManage()
         for enemy in enemies:
             enemy.velocity()
