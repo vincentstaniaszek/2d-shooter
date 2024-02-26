@@ -175,7 +175,7 @@ def menuControls():
             difficulty = "easy"
         if event.type == pygame.MOUSEBUTTONDOWN and exit_button[0] < pygame.mouse.get_pos()[0] < exit_button[
             0] + 500 and exit_button[1] < pygame.mouse.get_pos()[1] < exit_button[1] + 110:
-            game_state = "playing"
+            game_state = "menu"
 
     elif game_state == "death":
         if event.type == pygame.MOUSEBUTTONDOWN and options_button[0] < pygame.mouse.get_pos()[0] < options_button[
@@ -219,7 +219,7 @@ def deathScreen():
     screen.blit(pygame.font.SysFont("Times New Roman", 30).render("EXIT", True, WHITE, ), (765, 665))
 
 
-class Character(pygame.sprite.Sprite):
+class Soldier(pygame.sprite.Sprite):
     def __init__(self, x, y, max_health, speed):
         pygame.sprite.Sprite.__init__(self)
         self.x = x
@@ -331,7 +331,7 @@ class Character(pygame.sprite.Sprite):
         # self.rect = get_image(player_running, i, 128, 67, 3, WHITE)
 
 
-class Player(Character):
+class Player(Soldier):
     def __init__(self, x, y):
         super().__init__(x, y, 100, 1)
         self.scale = 3
@@ -450,7 +450,7 @@ class Player(Character):
         screen.blit((animation_list[self.frame]), (self.x - 180, self.y - 100))
 
 
-class Enemy(Character):
+class Enemy(Soldier):
     def __init__(self, x, y, ):
         super().__init__(x, y, 100, 0.3)
         self.scale = 3
