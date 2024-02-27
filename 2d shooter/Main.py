@@ -1,20 +1,19 @@
+# Loading libraries
 import random
 import pygame
 import sys
 import os
-from time import time
 
+# Initialising libraries
 pygame.init()
 pygame.mixer.init()
 pygame.display.init()
 pygame.font.init()
+
+# surface
 pygame.Surface((1600, 900))
 screen = pygame.display.set_mode((1600, 900))
 pygame.display.set_caption("2D shooter")
-
-WAITING_INTERVAL = 20000000
-start = time()
-# pygame.display.set_mode((1600, 900))
 
 # Colours
 GREEN = (0, 255, 0)
@@ -30,16 +29,20 @@ FPS = 60
 
 # Variables
 difficulty = "easy"
+GAME_STATE = "menu"
 
 # Audio
 sound = True
 shoot = pygame.mixer.Sound(os.path.join("audio", "Gun sounds", "9mm-pistol-shot.mp3"))
 walking = pygame.mixer.Sound(os.path.join("audio", "concrete-footsteps.mp3"))
 
-player_list = []
-
 
 def muted(state):
+    """
+    Function to change game volume from on to off and vice versa
+    :param state: Boolean value which is False when muted
+    :return:
+    """
     if state:
         pygame.mixer.Sound.set_volume(shoot, 0.3)
         pygame.mixer.Sound.set_volume(walking, 0.3)
@@ -52,7 +55,6 @@ def muted(state):
 muted(sound)
 
 # Backgrounds
-game_state = "menu"
 Background1 = pygame.image.load(os.path.join("Backgrounds", "Background 1", "War.png")).convert_alpha()
 ground = pygame.image.load(os.path.join("Backgrounds", "Background 1", "road.png")).convert_alpha()
 
@@ -93,6 +95,16 @@ ammo = pygame.font.SysFont("Times New Roman", 30)
 
 
 def get_image(sheet, frame, width, height, scale, colour):
+    """
+    Returns an image which is part of a sprite sheet depending on the current frame
+    :param sheet: Image(sprite sheet)
+    :param frame: The current frame/step in the animation
+    :param width: The width of each part of the sheet
+    :param height: The height of the image in the sheet
+    :param scale: The size of the image that it returned
+    :param colour: Takes in a colour value in order to remove that colour from the image
+    :return: Section of the sprite sheet
+    """
     image = pygame.Surface((width, height)).convert_alpha()
     image.blit(sheet, (0, 0), ((frame * width), 0, width, height))
     image = pygame.transform.scale(image, (width * scale, height * scale))
@@ -100,34 +112,22 @@ def get_image(sheet, frame, width, height, scale, colour):
     return image
 
 
-current_time = pygame.time.get_ticks()
-
-
-# last_up = current_time
-
-
-# class wait():
-#     def __init__(self):
-#         self.current_time = pygame.time.get_ticks()
-#         self.last_up = 1000
-#
-#     def wait1(self, time):
-#         print("c!", self.current_time)
-#         print("LU", self.last_up)
-#         print("T", time)
-#         if self.current_time - self.last_up >= time:
-#             print("yay")
-#             self.last_up = self.current_time
-#             return True
-
-
 def loadBack(level):
+    """
+    Loads and blits a background corresponding to the current level
+    :param level: Integer value which denotes the backgrounds to be loaded
+    :return:
+    """
     if level == 1:
         screen.blit(Background1, (0, 0))
         screen.blit(ground, (0, -210))
 
 
 def mainMenu():
+    """
+    Draws all the boxes and text for the main menu
+    :return:
+    """
     screen.fill(DARK_GREEN)
     pygame.draw.rect(screen, GREY, play_button)
     pygame.draw.rect(screen, GREY, options_button)
@@ -138,22 +138,26 @@ def mainMenu():
 
 
 def menuControls():
-    global game_state
+    """
+    Uses the variable game_state in order to allow buttons to be pressed using a mouse
+    :return:
+    """
+    global GAME_STATE
     global sound
     global difficulty
-    if game_state == "menu":
+    if GAME_STATE == "menu":
         if event.type == pygame.MOUSEBUTTONDOWN and play_button[0] < pygame.mouse.get_pos()[0] < play_button[
             0] + 500 and \
                 play_button[1] < pygame.mouse.get_pos()[1] < play_button[1] + 110:
-            game_state = "playing"
+            GAME_STATE = "playing"
         if event.type == pygame.MOUSEBUTTONDOWN and options_button[0] < pygame.mouse.get_pos()[0] < options_button[
             0] + 500 and options_button[1] < pygame.mouse.get_pos()[1] < options_button[1] + 110:
-            game_state = "options"
+            GAME_STATE = "options"
         if event.type == pygame.MOUSEBUTTONDOWN and exit_button[0] < pygame.mouse.get_pos()[0] < exit_button[
             0] + 500 and \
                 exit_button[1] < pygame.mouse.get_pos()[1] < exit_button[1] + 110:
             pygame.quit()
-    elif game_state == "options":
+    elif GAME_STATE == "options":
         if sound and event.type == pygame.MOUSEBUTTONDOWN and mute_button[0] < pygame.mouse.get_pos()[0] < mute_button[
             0] + 500 and \
                 mute_button[1] < pygame.mouse.get_pos()[1] < mute_button[1] + 110:
@@ -175,12 +179,12 @@ def menuControls():
             difficulty = "easy"
         if event.type == pygame.MOUSEBUTTONDOWN and exit_button[0] < pygame.mouse.get_pos()[0] < exit_button[
             0] + 500 and exit_button[1] < pygame.mouse.get_pos()[1] < exit_button[1] + 110:
-            game_state = "menu"
+            GAME_STATE = "menu"
 
-    elif game_state == "death":
+    elif GAME_STATE == "death":
         if event.type == pygame.MOUSEBUTTONDOWN and options_button[0] < pygame.mouse.get_pos()[0] < options_button[
             0] + 500 and options_button[1] < pygame.mouse.get_pos()[1] < options_button[1] + 110:
-            game_state = "menu"
+            GAME_STATE = "menu"
 
         if event.type == pygame.MOUSEBUTTONDOWN and exit_button[0] < pygame.mouse.get_pos()[0] < exit_button[
             0] + 500 and \
@@ -188,12 +192,17 @@ def menuControls():
             pygame.quit()
 
 
+# Defines the players default traveling direction
 moveRight = False
 moveLeft = False
 
 
 def options():
-    global game_state
+    """
+    Draws all the boxes and text for the options screen
+    :return:
+    """
+    global GAME_STATE
     screen.fill(DARK_GREEN)
     pygame.draw.rect(screen, GREY, mute_button)
     pygame.draw.rect(screen, GREY, difficulty_button)
@@ -210,7 +219,11 @@ def options():
 
 
 def deathScreen():
-    global game_state
+    """
+    Draws all the boxes and text for the death screen
+    :return:
+    """
+    global GAME_STATE
     screen.fill(DARK_GREEN)
     pygame.draw.rect(screen, GREY, options_button)
     pygame.draw.rect(screen, GREY, exit_button)
@@ -234,7 +247,7 @@ class Soldier(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (self.x, self.y)
         self.oGravity = -0.6
-        self.Gravity = -0.4
+        self.Gravity = -0.6
         self.vel = 0
         self.direction = "RIGHT"
         self.maxBullets = 5
@@ -253,6 +266,7 @@ class Soldier(pygame.sprite.Sprite):
 
     def updateX(self, L, R):
         """
+        Updates the objects x position
         :param L: True if facing Left
         :param R: True if facing Right
         :return:
@@ -269,35 +283,45 @@ class Soldier(pygame.sprite.Sprite):
             rect.center = (self.x, self.y)
             self.rect.center = (self.x, self.y)
 
-    def updateY(self, n):
-        self.y = self.y + n
+    def updateY(self, g):
+        """
+        Changes the objects y position
+        :param g: Float which controls the upwards acceleration
+        :return:
+        """
+        self.y = self.y + g
         rect = self.img.get_rect()
         rect.center = (self.x, self.y)
         self.rect.center = (self.x, self.y)
 
     def getHealth(self) -> int:
+        """
+        Returns objects health
+        :return:
+        """
         return self.health
 
     def updateHealth(self, damage):
+        """
+        Decreases objects health by the parameter damage
+        :param damage: Float which is the amount health decreases by
+        :return:
+        """
         self.health = self.health - damage
-        if self.health <= 0:
-            self.death()
-        else:
-            pass
 
-    def inputs(self):
-        pass
-
-    def velocity(self):
+    def yVelocity(self):
+        """
+        Manages the Y velocity of the object
+        :return:
+        """
         self.vel = self.vel - self.Gravity
         self.updateY(self.vel)
 
-    def death(self):
-        print("dead")
-        return True
-
     def collisionCheck(self):
-
+        """
+        Checks if object is colliding with the ground
+        :return: True if colliding, False if there is no collision
+        """
         # print(self.rect.center)
         if 594 < self.rect.center[1] < 680 and self.vel >= 0:
             self.Gravity = 0
@@ -309,18 +333,18 @@ class Soldier(pygame.sprite.Sprite):
 
     def bulletManage(self):
 
-        for bullet in self.bullets:
-            bullet.draw()
+        for soldierBullet in self.bullets:
+            soldierBullet.draw()
 
-            if bullet.hitCheck(self.rect):
+            if soldierBullet.hitCheck(self.rect):
                 print("hit")
-                self.bullets.pop(self.bullets.index(bullet))
-            if 1600 > bullet.x > 0:
-                bullet.x += bullet.speed
+                self.bullets.pop(self.bullets.index(soldierBullet))
+            if 1600 > soldierBullet.x > 0:
+                soldierBullet.x += soldierBullet.speed
             else:
                 self.ammoVisual.append((1040, -150 - 10 * (len(self.ammoVisual))))
                 if len(self.ammoVisual) > 0:
-                    self.bullets.pop(self.bullets.index(bullet))
+                    self.bullets.pop(self.bullets.index(soldierBullet))
 
         for i in self.ammoVisual:
             # print(len(self.ammoVisual))
@@ -674,7 +698,7 @@ while True:
         player1.vel = -15
         Jump = False
 
-    player1.velocity()
+    player1.yVelocity()
     player1.collisionCheck()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -684,10 +708,10 @@ while True:
             if event.key == pygame.K_ESCAPE:
                 pygame.quit()
 
-        if game_state != "playing":
+        if GAME_STATE != "playing":
             menuControls()
 
-        if game_state == "playing":
+        if GAME_STATE == "playing":
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_a:
                     moveLeft = True
@@ -710,7 +734,7 @@ while True:
                     # enemies.append(Enemy(random.randint(30, 1570), 300, 5))
                     enemies.append(Enemy(1000, 300))
                 if event.key == pygame.K_p:
-                    game_state = "options"
+                    GAME_STATE = "options"
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_a:
                     moveLeft = False
@@ -723,23 +747,23 @@ while True:
                 if event.key == pygame.K_SPACE:
                     Jump = False
 
-    if game_state == "menu":
+    if GAME_STATE == "menu":
         mainMenu()
-    if game_state == "options":
+    if GAME_STATE == "options":
         options()
-    if game_state == "death":
+    if GAME_STATE == "death":
         deathScreen()
 
     # pygame.draw.rect(screen, RED, player1.rect)
-    if game_state == "playing":
+    if GAME_STATE == "playing":
         loadBack(1)
         if player1.getHealth() <= 0:
-            game_state = "death"
+            GAME_STATE = "death"
             player1 = Player(200, 200)
             enemies.clear()
         player1.animationManage()
         for enemy in enemies:
-            enemy.velocity()
+            enemy.yVelocity()
             enemy.collisionCheck()
             enemy.animationManage()
             enemy.healthBar()
