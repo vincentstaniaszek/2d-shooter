@@ -234,6 +234,13 @@ def deathScreen():
 
 class Soldier(pygame.sprite.Sprite):
     def __init__(self, x, y, max_health, speed):
+        """
+        Super class for player and enemy
+        :param x: Objects x coordinate
+        :param y: Objects y coordinate
+        :param max_health: Objects maximum/starting health
+        :param speed: Integer value the speed of the object
+        """
         pygame.sprite.Sprite.__init__(self)
         self.x = x
         self.y = y
@@ -332,7 +339,10 @@ class Soldier(pygame.sprite.Sprite):
             return False
 
     def bulletManage(self):
-
+        """
+        Manages all the bullets on screen that came from this object
+        :return:
+        """
         for soldierBullet in self.bullets:
             soldierBullet.draw()
 
@@ -357,10 +367,21 @@ class Soldier(pygame.sprite.Sprite):
 
 class Player(Soldier):
     def __init__(self, x, y):
+        """
+        Subclass of soldier which has methods which are unique to this class
+        :param x: Objects x coordinate
+        :param y: Objects y coordinate
+        """
         super().__init__(x, y, 100, 1)
+        self.c_time = None
+        self.bar = None
         self.scale = 3
 
     def UI(self):
+        """
+        Draws and updates the players health bar and ammunition count at the top of the screen
+        :return:
+        """
         # Health Bar
         pygame.draw.rect(screen, SILVER, (10, 40, 400, 40), 20)
         pygame.draw.rect(screen, BLACK, (5, 35, 410, 50), 5)
@@ -376,6 +397,10 @@ class Player(Soldier):
         screen.blit(ammunition, (1420, 35))
 
     def shoot(self):
+        """
+        Responsible for creating bullets and changing the players state when firing
+        :return:
+        """
         if len(self.ammoVisual) > 0:
             self.ammoVisual.pop()
         self.state = "firing"
@@ -385,6 +410,10 @@ class Player(Soldier):
                 Projectile((self.rect.center[0], self.rect.center[1] - 30), 20, self.direction, RED))
 
     def animationManage(self):
+        """
+        Runs specific animations depending on the current state of the player
+        :return:
+        """
         self.c_time = pygame.time.get_ticks()
         if self.state == "idle":
             animation_steps = 4
@@ -476,7 +505,13 @@ class Player(Soldier):
 
 class Enemy(Soldier):
     def __init__(self, x, y, ):
+        """
+        Subclass which holds the unique methods and attribute for the non-playable enemy
+        :param x: Objects x coordinate
+        :param y: Objects y coordinate
+        """
         super().__init__(x, y, 100, 0.3)
+        self.c_time = None
         self.scale = 3
         self.t = pygame.time.get_ticks()
         self.T = self.t + 500
@@ -489,12 +524,20 @@ class Enemy(Soldier):
         self.last_up = pygame.time.get_ticks()
 
     def healthBar(self):
+        """
+        Draws and updates a health bar over the object
+        :return:
+        """
         pygame.draw.rect(screen, SILVER, (self.x - 45, self.y - 120, 100, 5), 20)
         pygame.draw.rect(screen, BLACK, (self.x - 50, self.y - 125, 110, 15), 5)
         self.bar = pygame.Rect(self.x - 45, self.y - 120, 1 * self.health, 5)
         pygame.draw.rect(screen, RED, self.bar, 50)
 
     def shoot(self):
+        """
+        Responsible for creating bullets and changing the players state when firing
+        :return:
+        """
         self.state = "firing"
         if len(self.bullets) < self.maxBullets:
             pygame.mixer.Sound.play(shoot)
@@ -502,6 +545,13 @@ class Enemy(Soldier):
                 Projectile((self.rect.center[0], self.rect.center[1] - 30), 20, self.direction, RED))
 
     def vision(self, target_x, target_y):
+        """
+        Checks if the object has seen the enemy within a certain range
+        :param range: The maximum amount of pixels the enemy can see the player
+        :param target_x: Targets(player) x coordinate
+        :param target_y: Targets(player) y coordinate
+        :return: True if the player has been seen and is in range
+        """
         x = self.x
         if self.direction == "RIGHT":
             for i in range(600):
@@ -518,6 +568,10 @@ class Enemy(Soldier):
         self.x = x
 
     def movement(self):
+        """
+        Responsible for the random movement of the enemy
+        :return:
+        """
         self.c_time = pygame.time.get_ticks()
         if self.move == 1:
             self.updateX(0, 1)
@@ -545,6 +599,10 @@ class Enemy(Soldier):
                 self.last_up = self.c_time
 
     def AI(self):
+        """
+        Links together previous methods in order to make a working AI
+        :return:
+        """
         c_time = pygame.time.get_ticks()
         self.movement()
         if self.vision(player1.x, player1.y):
@@ -567,6 +625,10 @@ class Enemy(Soldier):
                 self.move = 0
 
     def animationManage(self):
+        """
+        Runs specific animations depending on the current state of the player
+        :return:
+        """
         self.c_time = pygame.time.get_ticks()
         if self.state == "idle":
             animation_steps = 4
@@ -636,6 +698,13 @@ class Enemy(Soldier):
 
 class Projectile(pygame.sprite.Sprite):
     def __init__(self, center, speed, direction, colour):
+        """
+        Holds the methods and attributes for bullets in the game
+        :param center: The center of the object which is shooting
+        :param speed: The speed of the bullet
+        :param direction: The direction the bullet will go
+        :param colour: The colour of the bullet
+        """
         pygame.sprite.Sprite.__init__(self)
         self.center = center
         self.x = center[0] + 60
@@ -652,6 +721,11 @@ class Projectile(pygame.sprite.Sprite):
             self.x = center[0] - 60
 
     def hitCheck(self, targetCoords):
+        """
+        Checks if the bullet is impacting on the target coordinates
+        :param targetCoords: Targets rect
+        :return: True if bullet is on the target coordinates
+        """
         # print(targetCoords[0])
         # print(self.x)
         if targetCoords[0] <= self.x <= (targetCoords[2] + targetCoords[0]) and targetCoords[1] <= self.y <= (
@@ -661,14 +735,17 @@ class Projectile(pygame.sprite.Sprite):
             return False
 
     def draw(self):
+        """
+        Draws the bullet
+        :return:
+        """
         pygame.draw.circle(screen, self.colour, (self.x, self.y), 7)
 
 
-def draw(x1, y1, x2, y2, width):
-    pygame.draw.rect(screen, GREEN, (x1, y1, x2, y2), width)
+# def draw(x1, y1, x2, y2, width):
+#     pygame.draw.rect(screen, GREEN, (x1, y1, x2, y2), width)
 
 
-# delay = wait()
 player1 = Player(200, 200)
 
 Jump = False
@@ -713,6 +790,7 @@ while True:
 
         if GAME_STATE == "playing":
             if event.type == pygame.KEYDOWN:
+                # Checks for keyboard inputs
                 if event.key == pygame.K_a:
                     moveLeft = True
                     pygame.mixer.Sound.play(walking)
@@ -747,6 +825,7 @@ while True:
                 if event.key == pygame.K_SPACE:
                     Jump = False
 
+    # Checking game states
     if GAME_STATE == "menu":
         mainMenu()
     if GAME_STATE == "options":
@@ -770,6 +849,7 @@ while True:
             enemy.AI()
             enemy.bulletManage()
             for bullet in enemy.bullets:
+                # Checks each enemy bullet to see if it hits the player
                 if bullet.hitCheck(player1.rect):
                     if difficulty == "easy":
                         player1.updateHealth(15)
@@ -783,7 +863,7 @@ while True:
                     print("hit")
                     player1.ammoVisual.append((1040, -150 - 10 * (len(player1.ammoVisual))))
                     player1.bullets.pop(player1.bullets.index(bullet))
-
+            # Removes enemies if they reach 0 or below health
             if enemy.getHealth() <= 0:
                 if enemy.c_time - update1 >= 2000:
                     enemies.pop(enemies.index(enemy))
