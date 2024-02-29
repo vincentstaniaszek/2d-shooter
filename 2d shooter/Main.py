@@ -150,8 +150,8 @@ def menuControls():
             0] + 500 and \
                 play_button[1] < pygame.mouse.get_pos()[1] < play_button[1] + 110:
             GAME_STATE = "playing"
-        if event.type == pygame.MOUSEBUTTONDOWN and options_button[0] < pygame.mouse.get_pos()[0] < options_button[
-            0] + 500 and options_button[1] < pygame.mouse.get_pos()[1] < options_button[1] + 110:
+        if event.type == pygame.MOUSEBUTTONDOWN and options_button[0] < pygame.mouse.get_pos()[0] < options_button[0] \
+                + 500 and options_button[1] < pygame.mouse.get_pos()[1] < options_button[1] + 110:
             GAME_STATE = "options"
         if event.type == pygame.MOUSEBUTTONDOWN and exit_button[0] < pygame.mouse.get_pos()[0] < exit_button[
             0] + 500 and \
@@ -170,20 +170,20 @@ def menuControls():
             sound = True
             muted(sound)
         if difficulty == "easy" and event.type == pygame.MOUSEBUTTONDOWN and difficulty_button[0] < \
-                pygame.mouse.get_pos()[0] < difficulty_button[
-            0] + 500 and difficulty_button[1] < pygame.mouse.get_pos()[1] < difficulty_button[1] + 110:
+                pygame.mouse.get_pos()[0] < difficulty_button[0] + 500 \
+                and difficulty_button[1] < pygame.mouse.get_pos()[1] < difficulty_button[1] + 110:
             difficulty = "hard"
         elif difficulty == "hard" and event.type == pygame.MOUSEBUTTONDOWN and difficulty_button[0] < \
-                pygame.mouse.get_pos()[0] < difficulty_button[
-            0] + 500 and difficulty_button[1] < pygame.mouse.get_pos()[1] < difficulty_button[1] + 110:
+                pygame.mouse.get_pos()[0] < difficulty_button[0] \
+                + 500 and difficulty_button[1] < pygame.mouse.get_pos()[1] < difficulty_button[1] + 110:
             difficulty = "easy"
-        if event.type == pygame.MOUSEBUTTONDOWN and exit_button[0] < pygame.mouse.get_pos()[0] < exit_button[
-            0] + 500 and exit_button[1] < pygame.mouse.get_pos()[1] < exit_button[1] + 110:
+        if event.type == pygame.MOUSEBUTTONDOWN and exit_button[0] < pygame.mouse.get_pos()[0] < exit_button[0] \
+                + 500 and exit_button[1] < pygame.mouse.get_pos()[1] < exit_button[1] + 110:
             GAME_STATE = "menu"
 
     elif GAME_STATE == "death":
-        if event.type == pygame.MOUSEBUTTONDOWN and options_button[0] < pygame.mouse.get_pos()[0] < options_button[
-            0] + 500 and options_button[1] < pygame.mouse.get_pos()[1] < options_button[1] + 110:
+        if event.type == pygame.MOUSEBUTTONDOWN and options_button[0] < pygame.mouse.get_pos()[0] < \
+                options_button[0] + 500 and options_button[1] < pygame.mouse.get_pos()[1] < options_button[1] + 110:
             GAME_STATE = "menu"
 
         if event.type == pygame.MOUSEBUTTONDOWN and exit_button[0] < pygame.mouse.get_pos()[0] < exit_button[
@@ -387,8 +387,8 @@ class Player(Soldier):
         pygame.draw.rect(screen, BLACK, (5, 35, 410, 50), 5)
         self.bar = pygame.Rect(10, 40, 4 * self.health, 40)
         pygame.draw.rect(screen, RED, self.bar, 50)
-        healthcount = health.render(("Health:" + str(player1.health)), True, (0, 0, 0))
-        screen.blit(healthcount, (10, 35))
+        health_count = health.render(("Health:" + str(player1.health)), True, (0, 0, 0))
+        screen.blit(health_count, (10, 35))
         # Ammunition count
         pygame.draw.rect(screen, (70, 70, 70), (1350, 0, 400, 100))
         pygame.draw.rect(screen, BLACK, (1360, 15, 45, 80))
@@ -475,29 +475,6 @@ class Player(Soldier):
                         self.frame = 0
                     self.last_update = self.c_time
 
-        # if self.getHealth() <= 0:
-        #     animation_steps = 4
-        #     animation_list = []
-        #     if self.direction == "RIGHT":
-        #         for i in range(animation_steps):
-        #             animation_list.append(get_image(player_death_right, i, 128, 62, 3, WHITE))
-        #         if self.c_time - self.last_update >= self.animation_cooldown:
-        #             self.frame += 1
-        #             if self.frame >= len(animation_list):
-        #                 self.played = True
-        #                 self.frame = 0
-        #             self.last_update = self.c_time
-        #
-        #     if self.direction == "LEFT":
-        #         for i in range(animation_steps):
-        #             animation_list.append(get_image(player_death_left, i, 128, 62, 3, WHITE))
-        #         if self.c_time - self.last_update >= self.animation_cooldown:
-        #             self.frame += 1
-        #             if self.frame >= len(animation_list):
-        #                 self.played = True
-        #                 self.frame = 0
-        #             self.last_update = self.c_time
-        if self.state == "null":
             pass
 
         screen.blit((animation_list[self.frame]), (self.x - 180, self.y - 100))
@@ -511,6 +488,7 @@ class Enemy(Soldier):
         :param y: Objects y coordinate
         """
         super().__init__(x, y, 100, 0.3)
+        self.bar = None
         self.c_time = None
         self.scale = 3
         self.t = pygame.time.get_ticks()
@@ -547,7 +525,6 @@ class Enemy(Soldier):
     def vision(self, target_x, target_y):
         """
         Checks if the object has seen the enemy within a certain range
-        :param range: The maximum amount of pixels the enemy can see the player
         :param target_x: Targets(player) x coordinate
         :param target_y: Targets(player) y coordinate
         :return: True if the player has been seen and is in range
@@ -755,7 +732,12 @@ enemies = []
 update1 = pygame.time.get_ticks() + 200
 clock = pygame.time.Clock()
 while True:
-    player1.updateX(moveLeft, moveRight)
+    if 0 <= player1.x <= 1600:
+        player1.updateX(moveLeft, moveRight)
+    elif 0 >= player1.x:
+        player1.updateX(0, moveRight)
+    elif 0 <= player1.x:
+        player1.updateX(moveLeft, 0)
     # current_time = pygame.time.get_ticks()
     # if current_time - last_update >= animation_cooldown:
     #     if frame > 5:
@@ -833,7 +815,6 @@ while True:
     if GAME_STATE == "death":
         deathScreen()
 
-    # pygame.draw.rect(screen, RED, player1.rect)
     if GAME_STATE == "playing":
         loadBack(1)
         if player1.getHealth() <= 0:
@@ -848,6 +829,10 @@ while True:
             enemy.healthBar()
             enemy.AI()
             enemy.bulletManage()
+            if 0 >= enemy.x:
+                enemy.move = 1
+            elif 1600 <= enemy.x:
+                enemy.move = -1
             for bullet in enemy.bullets:
                 # Checks each enemy bullet to see if it hits the player
                 if bullet.hitCheck(player1.rect):
@@ -860,7 +845,10 @@ while True:
             for bullet in player1.bullets:
                 if bullet.hitCheck(enemy.rect):
                     enemy.updateHealth(25)
-                    print("hit")
+                    if player1.direction == "RIGHT":
+                        enemy.move = -1
+                    elif player1.direction == "LEFT":
+                        enemy.move = 1
                     player1.ammoVisual.append((1040, -150 - 10 * (len(player1.ammoVisual))))
                     player1.bullets.pop(player1.bullets.index(bullet))
             # Removes enemies if they reach 0 or below health
