@@ -414,6 +414,7 @@ class Player(Soldier):
         Runs specific animations depending on the current state of the player
         :return:
         """
+        global animation_list
         self.c_time = pygame.time.get_ticks()
         if self.state == "idle":
             animation_steps = 4
@@ -606,6 +607,7 @@ class Enemy(Soldier):
         Runs specific animations depending on the current state of the player
         :return:
         """
+        global animation_list
         self.c_time = pygame.time.get_ticks()
         if self.state == "idle":
             animation_steps = 4
