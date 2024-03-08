@@ -105,6 +105,20 @@ current_time = pygame.time.get_ticks()
 # last_up = current_time
 
 
+# class wait():
+#     def __init__(self):
+#         self.current_time = pygame.time.get_ticks()
+#         self.last_up = 1000
+#
+#     def wait1(self, time):
+#         print("c!", self.current_time)
+#         print("LU", self.last_up)
+#         print("T", time)
+#         if self.current_time - self.last_up >= time:
+#             print("yay")
+#             self.last_up = self.current_time
+#             return True
+
 
 def loadBack(level):
     if level == 1:
@@ -275,7 +289,7 @@ class Character(pygame.sprite.Sprite):
         self.updateY(self.vel)
 
     def death(self):
-        # print("dead")
+        print("dead")
         return True
 
     def collisionCheck(self):
@@ -295,7 +309,7 @@ class Character(pygame.sprite.Sprite):
             bullet.draw()
 
             if bullet.hitCheck(self.rect):
-                # print("hit")
+                print("hit")
                 self.bullets.pop(self.bullets.index(bullet))
             if 1600 > bullet.x > 0:
                 bullet.x += bullet.speed
@@ -403,6 +417,29 @@ class Player(Character):
                     if self.frame >= len(animation_list):
                         self.frame = 0
                     self.last_update = self.c_time
+
+        # if self.getHealth() <= 0:
+        #     animation_steps = 4
+        #     animation_list = []
+        #     if self.direction == "RIGHT":
+        #         for i in range(animation_steps):
+        #             animation_list.append(get_image(player_death_right, i, 128, 62, 3, WHITE))
+        #         if self.c_time - self.last_update >= self.animation_cooldown:
+        #             self.frame += 1
+        #             if self.frame >= len(animation_list):
+        #                 self.played = True
+        #                 self.frame = 0
+        #             self.last_update = self.c_time
+        #
+        #     if self.direction == "LEFT":
+        #         for i in range(animation_steps):
+        #             animation_list.append(get_image(player_death_left, i, 128, 62, 3, WHITE))
+        #         if self.c_time - self.last_update >= self.animation_cooldown:
+        #             self.frame += 1
+        #             if self.frame >= len(animation_list):
+        #                 self.played = True
+        #                 self.frame = 0
+        #             self.last_update = self.c_time
         if self.state == "null":
             pass
 
@@ -693,8 +730,8 @@ while True:
     # pygame.draw.rect(screen, RED, player1.rect)
     if game_state == "playing":
         loadBack(1)
-        if player1.getHealth() <= 0:
-            game_state = "death"
+        # if player1.getHealth() <= 0:
+        #     game_state = "death"
         player1.animationManage()
         for enemy in enemies:
             enemy.velocity()
@@ -709,12 +746,12 @@ while True:
                         player1.updateHealth(15)
                     elif difficulty == "hard":
                         player1.updateHealth(22)
-                    # print("hit")
+                    print("hit")
                     enemy.bullets.pop(enemy.bullets.index(bullet))
             for bullet in player1.bullets:
                 if bullet.hitCheck(enemy.rect):
                     enemy.updateHealth(25)
-                    # print("hit")
+                    print("hit")
                     player1.ammoVisual.append((1040, -150 - 10 * (len(player1.ammoVisual))))
                     player1.bullets.pop(player1.bullets.index(bullet))
 
