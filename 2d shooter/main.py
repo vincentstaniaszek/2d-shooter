@@ -3,15 +3,13 @@ import random
 import pygame
 import sys
 import os
+import noise
 
 # Initialising libraries
 pygame.init()
 pygame.mixer.init()
 pygame.display.init()
 pygame.font.init()
-
-# camera
-
 
 # surface
 Height = 900
@@ -64,7 +62,7 @@ Background1 = pygame.image.load(os.path.join("Backgrounds", "Background 1", "War
 Background2 = pygame.image.load(os.path.join("Backgrounds", "New background", "Background.png")).convert_alpha()
 Background2 = pygame.transform.scale_by(Background2, 3)
 ground = pygame.image.load(os.path.join("Backgrounds", "Background 1", "road.png")).convert_alpha()
-ground2 = pygame.image.load(os.path.join("Backgrounds", "Ground", "Tile_22.png")).convert_alpha()
+ground2 = pygame.image.load(os.path.join("Backgrounds", "Ground", "Tile_22_long2.png")).convert_alpha()
 ground2 = pygame.transform.scale_by(ground2, 5).convert_alpha()
 
 # 0 - player1.camera_offset_x + player1.x + Width, 0
@@ -92,22 +90,63 @@ class tiles:
     def __init__(self, x, y):
         self.x = x
         self.y = y
-        self.ground2 = pygame.image.load(os.path.join("Backgrounds", "Ground", "Tile_22.png"))
-        self.ground2 = pygame.transform.scale_by(self.ground2, 5)
+        self.ground2 = pygame.image.load(os.path.join("Backgrounds", "Ground", "Tile_22_long.png")).convert()
+        self.ground2 = pygame.transform.scale_by(self.ground2, 3)
         self.rect = self.ground2.get_rect()
+        self.box = self.rect
+        # print(self.rect)
         self.rect.center = (self.x, self.y + 85)
+        blockRect.append(self.rect)
 
     def hitBox(self):
-        pygame.draw.rect(screen, RED, self.rect)
+        pygame.draw.rect(screen, RED, (self.rect))
+
+    def update(self):
+        blockRect.append(self.rect)
+        # self.box = self.ground2.get_rect()
+
+    def wallCol(self, target_x, target_y):
+        if self.rect.collidepoint(target_x, target_y):
+            print("collision")
 
 
-for i in range(100):
-    blocks.append(tiles(150 * i, 750))
-    for l in blocks:
-        blockRect.append(l.rect)
+# for i in range(100):
+#     print((noise.pnoise1((i * 0.01)) * 1000))
+# height = int((noise.pnoise1((i * 0.0001) * 80000) + 500))
+def genBlock(x):
+    prevHeight = 300
+    seed = random.randint(1, 100)
+    print(seed)
+    # seed = 121
+    for i in range(100):
+        height = int((noise.pnoise1((i * 0.1), persistence=10, repeat=9999, base=seed) * 300) + 600)
+        height = round(height, -2)
+
+        if 750 < height:
+            height = 750
+        elif i > 1 and height < 400:
+            height = blocks[i-1].y
+
+        # print(height)
+        blocks.append(tiles(i*93, height))
+
+    # height = int(noise.pnoise1(0.1, repeat=99999)) + 750
+    # for i in range(len(blocks)):
+    #     print(blocks[i].x, blocks[i].y
+
+
+
+# height = noise.pnoise1(200*10, 10)
+# print(height)
+
+# for i in range(100):
+#     for l in blocks:
+#         blockRect.append(l.rect)
+
+
 def loadBack(level):
     """
-    Loads and blits a background corresponding to the current level
+    Loads and blits background corresponding to the current level
     :param level: Integer value which denotes the backgrounds to be loaded
     :return:
     """
@@ -123,12 +162,14 @@ def loadBack(level):
         screen.blit(Background2, (0 - player1.camera_offset_x - 4 * Width, 0))
         for i in range(len(blocks)):
             for square in blocks:
-                square.rect = (150 * i - player1.camera_offset_x, 750)
+                # square.x = square.x - player1.camera_offset_x
+
+                square.rect = (square.x - player1.camera_offset_x + 47, square.y, 93, 300)
                 screen.blit(square.ground2, square.rect)
                 # print(square.rect)
+                # print(blockRect)
+                square.update()
                 # square.hitBox()
-
-
 
 
 # Animations
@@ -318,7 +359,7 @@ class Soldier(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (self.x, self.y)
         self.oGravity = -1.5
-        self.Gravity = -0.6
+        self.Gravity = -1.5
         self.vel = 0
         self.direction = "RIGHT"
         self.maxBullets = 5
@@ -331,7 +372,7 @@ class Soldier(pygame.sprite.Sprite):
         self.ammunition = pygame.transform.scale_by(self.ammunition, 3)
         self.ammoVisual = []
         self.camera_offset_x = 0
-
+        self.collision = False
         if len(self.ammoVisual) < 5:
             for i in range(5 - len(self.bullets)):
                 self.ammoVisual.append((1040, -150 - 10 * (len(self.ammoVisual))))
@@ -370,30 +411,20 @@ class Soldier(pygame.sprite.Sprite):
         self.vel = self.vel - self.Gravity
         self.updateY(self.vel)
 
-    def collisionCheck(self):
-        """
-        Checks if object is colliding with the ground
-        :return: True if colliding, False if there is no collision
-        """
-        # print(self.rect.center)
-        if 620 < self.rect.center[1] < 700 and self.vel >= 0:
-            self.Gravity = 0
+    def collisionCheck3(self, block):
+        if self.rect.colliderect(block):
             self.vel = 0
-            return True
-        else:
-            self.Gravity = self.oGravity
-            return False
-
-    def collisionCheck2(self, list):
-        if self.rect.collideobjects(list):
-            # print("collision")
             self.Gravity = 0
-            self.vel = 0
+            self.collision = True
             return False
         else:
-            self.Gravity = self.oGravity
+            self.collision = False
             return True
 
+    def wallCollision(self, tile):
+        tile.rect.collidepoint((self.x + 45), (self.y + 30))
+        pygame.draw.circle(screen, RED, (self.x + 45, self.y + 30), 5)
+        print("wall collision")
 
     def bulletManage(self):
         """
@@ -772,7 +803,10 @@ class Enemy(Soldier):
         # self.rect.center = (self.x - player1.camera_offset_x , self.y)
         screen.blit((animation_list[self.frame]), (self.x - 180 - player1.camera_offset_x, self.y - 100))
 
+
 test = tiles(1000, 500)
+
+
 class Projectile(pygame.sprite.Sprite):
     def __init__(self, center, speed, direction, colour):
         """
@@ -832,12 +866,13 @@ enemies = []
 update1 = pygame.time.get_ticks() + 200
 clock = pygame.time.Clock()
 while True:
-    if 0 <= player1.x <= 1600:
+    if not player1.collision:
         player1.updateX(moveLeft, moveRight)
-    elif 0 >= player1.x:
-        player1.updateX(0, moveRight)
-    elif 0 <= player1.x:
-        player1.updateX(moveLeft, 0)
+
+    # elif 0 >= player1.x:
+    #     player1.updateX(0, moveRight)
+    # elif 0 <= player1.x:
+    #     player1.updateX(moveLeft, 0)
     # current_time = pygame.time.get_ticks()
     # if current_time - last_update >= animation_cooldown:
     #     if frame > 5:
@@ -853,10 +888,9 @@ while True:
             player1.state = "idle"
             update = tick
 
-    if Jump and not player1.collisionCheck2(blockRect):
+    if Jump and player1.Gravity == 0:
         player1.vel = -30
         Jump = False
-
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -873,22 +907,27 @@ while True:
             if event.type == pygame.KEYDOWN:
                 # Checks for keyboard inputs
                 if event.key == pygame.K_a:
-                    moveLeft = True
-                    pygame.mixer.Sound.play(walking)
-                    player1.direction = "LEFT"
-                    player1.state = "running"
+                    if not player1.collision:
+                        moveLeft = True
+                        pygame.mixer.Sound.play(walking)
+                        player1.direction = "LEFT"
+                        player1.state = "running"
                 if event.key == pygame.K_d:
-                    pygame.mixer.Sound.play(walking)
-                    moveRight = True
-                    player1.state = "running"
-                    player1.direction = "RIGHT"
+                    if not player1.collision:
+                        pygame.mixer.Sound.play(walking)
+                        moveRight = True
+                        player1.state = "running"
+                        player1.direction = "RIGHT"
                 if event.key == pygame.K_ESCAPE:
                     running = False
                 if event.key == pygame.K_SPACE:
                     Jump = True
-
                 if event.key == pygame.K_j:
                     player1.shoot()
+                if event.key == pygame.K_i:
+                    # print("c", player1.camera_offset_x)
+                    genBlock(player1.camera_offset_x)
+                    print(blocks)
                 if event.key == pygame.K_l:
                     # enemies.append(Enemy(random.randint(30, 1570), 300, 5))
                     enemies.append(Enemy(1000, 324))
@@ -926,7 +965,8 @@ while True:
             print(enemy.x)
             enemy.camera()
             enemy.yVelocity()
-            enemy.collisionCheck2(blockRect)
+            for block in blocks:
+                enemy.collisionCheck3(block)
             enemy.animationManage()
             enemy.healthBar()
             enemy.AI()
@@ -958,12 +998,19 @@ while True:
             if enemy.getHealth() <= 0:
                 if enemy.c_time - update1 >= 2000:
                     enemies.pop(enemies.index(enemy))
-        player1.yVelocity()
-        # player1.collisionCheck()
+        if not player1.collision:
+            player1.yVelocity()
+            player1.Gravity = player1.oGravity
         player1.UI()
         player1.bulletManage()
         # print(blockRect)
-        player1.collisionCheck2(blockRect)
+        # player1.collisionCheck2(blockRect)
+        for block in blocks:
+            player1.collisionCheck3(block)
+            # player1.wallCollision(block)
+            # print(block.rect)
+            # if block.rect.collidepoint(player1.x + 45, player1.y + 30):
+            #     print("col")
         # for y in blockRect:
         #     pygame.draw.rect(screen, RED, y)
     # pygame.time.set_timer()
@@ -977,8 +1024,6 @@ while True:
     # print(player1.camera_offset_x)
     pygame.display.flip()
     clock.tick(60)
-    screen.blit(test.ground2, test.rect)
-    test.hitBox()
     # print(clock.get_fps())
 
 # pygame.quit()
